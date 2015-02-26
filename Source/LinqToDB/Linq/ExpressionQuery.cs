@@ -15,14 +15,14 @@ namespace LinqToDB.Linq
 	using Async;
 	using Extensions;
 
-	abstract class ExpressionQuery<T> : IExpressionQuery<T>
+	public abstract class ExpressionQuery<T> : IExpressionQuery<T>
 	{
 		#region Init
 
 		protected void Init([NotNull] IDataContext dataContext, Expression expression)
 		{
 			DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
-			Expression  = expression  ?? Expression.Constant(this);
+			Expression  = expression ?? Expression.Constant(this);
 		}
 
 		[NotNull] public Expression   Expression  { get; set; }
@@ -44,7 +44,7 @@ namespace LinqToDB.Linq
 		// ReSharper disable once InconsistentNaming
 		string _sqlText => SqlText;
 
-		public string SqlText
+		public  string  SqlText
 		{
 			get
 			{
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
-
+			
 			return query
 				.GetForEachAsync(DataContext, Expression, Parameters, r => { action(r); return true; }, cancellationToken);
 		}
@@ -179,7 +179,7 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
-
+			
 			return query.GetIEnumerable(DataContext, Expression, Parameters).GetEnumerator();
 		}
 
@@ -188,7 +188,7 @@ namespace LinqToDB.Linq
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true);
 			Expression     = expression;
-
+			
 			return query.GetIEnumerable(DataContext, Expression, Parameters).GetEnumerator();
 		}
 
