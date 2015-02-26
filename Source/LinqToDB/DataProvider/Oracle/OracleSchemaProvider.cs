@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Data;
 	using SchemaProvider;
 
-	class OracleSchemaProvider : SchemaProviderBase
+	public class OracleSchemaProvider : SchemaProviderBase
 	{
 		public OracleSchemaProvider(string providerName)
 		{
@@ -231,8 +231,8 @@ namespace LinqToDB.DataProvider.Oracle
 			return
 			(
 				from p in ps.AsEnumerable()
-				let schema = p.Field<string>("OWNER")
-				let name   = p.Field<string>("OBJECT_NAME")
+				let schema  = p.Field<string>("OWNER")
+				let name    = p.Field<string>("OBJECT_NAME")
 				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == _currentUser
 				select new ProcedureInfo
 				{
