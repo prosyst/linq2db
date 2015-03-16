@@ -22,6 +22,7 @@ namespace LinqToDB.DataProvider.Oracle
 	public class OracleDataProvider : DynamicDataProviderBase
 	{
 		static readonly int NanosecondsPerTick = Convert.ToInt32(1000000000 / TimeSpan.TicksPerSecond);
+        static Dictionary<Type, OracleDataProvider> _providerCache = new Dictionary<Type, OracleDataProvider>();
 
 		public OracleDataProvider()
 			: this(OracleTools.DetectedProviderName)
@@ -31,8 +32,8 @@ namespace LinqToDB.DataProvider.Oracle
 		public OracleDataProvider(string name)
 			: base(name, null)
 		{
-			//SqlProviderFlags.IsCountSubQuerySupported        = false;
-			SqlProviderFlags.IsIdentityParameterRequired       = true;
+			//SqlProviderFlags.IsCountSubQuerySupported    = false;
+			SqlProviderFlags.IsIdentityParameterRequired = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
@@ -74,8 +75,10 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			var typesNamespace  = AssemblyName + ".Types.";
+			if (TryInitFromCache(connectionType))
+				return;
 
+			var typesNamespace  = AssemblyName + ".Types.";
 			_oracleBFile        = connectionType.AssemblyEx().GetType(typesNamespace + "OracleBFile",        true);
 			_oracleBinary       = connectionType.AssemblyEx().GetType(typesNamespace + "OracleBinary",       true);
 			_oracleBlob         = connectionType.AssemblyEx().GetType(typesNamespace + "OracleBlob",         true);
@@ -225,9 +228,9 @@ namespace LinqToDB.DataProvider.Oracle
 				LambdaExpression GetDecimal(Type t, bool convToDecimal)
 				{
 					Expression expr =
-						Expression.Call(setPrecisionMethod,
+							Expression.Call(setPrecisionMethod,
 							Expression.Call(
-								dataReaderParameter,
+						dataReaderParameter,
 								"GetOracleDecimal",
 								null,
 								indexParameter),
@@ -286,7 +289,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				// ((OracleCommand)dataConnection.Command).BindByName = true;
 
-				var p     = Expression.Parameter(typeof(DataConnection), "dataConnection");
+				var p = Expression.Parameter(typeof(DataConnection), "dataConnection");
 				var pbind = Expression.Parameter(typeof(bool), "value");
 
 				_setBindByName =
@@ -351,6 +354,55 @@ namespace LinqToDB.DataProvider.Oracle
 			_setLong           = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Long");
 			_setLongRaw        = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "LongRaw");
 
+            SetupMappingSchema();
+
+            _providerCache[connectionType] = this;
+		}
+
+        private bool TryInitFromCache(Type connectionType) 
+        {
+            OracleDataProvider templateProvider = null;
+            
+            if (!_providerCache.TryGetValue(connectionType, out templateProvider) ||
+                templateProvider == null)
+                return false;
+
+            this._oracleBFile        = templateProvider._oracleBFile;       
+            this._oracleBinary       = templateProvider._oracleBinary;      
+            this._oracleBlob         = templateProvider._oracleBlob;
+            this._oracleClob         = templateProvider._oracleClob;
+            this._oracleDate         = templateProvider._oracleDate;
+            this._oracleDecimal      = templateProvider._oracleDecimal;
+            this._oracleIntervalDS   = templateProvider._oracleIntervalDS;
+            this._oracleIntervalYM   = templateProvider._oracleIntervalYM;
+            this._oracleRefCursor    = templateProvider._oracleRefCursor;
+            this._oracleString       = templateProvider._oracleString;
+            this._oracleTimeStamp    = templateProvider._oracleTimeStamp;
+            this._oracleTimeStampLTZ = templateProvider._oracleTimeStampLTZ;
+            this._oracleTimeStampTZ  = templateProvider._oracleTimeStampTZ;
+            this._oracleRef          = templateProvider._oracleRef;
+            this._oracleXmlType      = templateProvider._oracleXmlType;
+            this._oracleXmlStream    = templateProvider._oracleXmlStream;
+
+            this._setBindByName            = templateProvider._setBindByName;
+            this._createOracleTimeStampTZ  = templateProvider._createOracleTimeStampTZ;
+
+            this._oracleRef = templateProvider._oracleRef;
+            this._oracleXmlType = templateProvider._oracleXmlType;
+            this._oracleXmlStream = templateProvider._oracleXmlStream;
+
+            foreach (var item in templateProvider.ReaderExpressions)
+            {
+                this.ReaderExpressions[item.Key] = item.Value;
+            }
+
+            SetupMappingSchema();
+                        
+            return true;
+        }
+
+        private void SetupMappingSchema()
+        {
 			MappingSchema.AddScalarType(_oracleBFile,        GetNullValue(_oracleBFile),        true, DataType.VarChar);    // ?
 			MappingSchema.AddScalarType(_oracleBinary,       GetNullValue(_oracleBinary),       true, DataType.VarBinary);
 			MappingSchema.AddScalarType(_oracleBlob,         GetNullValue(_oracleBlob),         true, DataType.Blob);       // ?
@@ -425,8 +477,8 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public override MappingSchema MappingSchema => Name == ProviderName.OracleNative
-			? MappingSchemaInstance.NativeMappingSchema as MappingSchema
-			: MappingSchemaInstance.ManagedMappingSchema;
+					? MappingSchemaInstance.NativeMappingSchema as MappingSchema
+					: MappingSchemaInstance.ManagedMappingSchema;
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
@@ -603,7 +655,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		OracleBulkCopy _bulkCopy;
 
@@ -631,9 +683,9 @@ namespace LinqToDB.DataProvider.Oracle
 				source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -660,6 +712,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleMergeBuilder<TTarget, TSource>(connection, merge);
 		}
 
-		#endregion
+#endregion
 	}
 }
