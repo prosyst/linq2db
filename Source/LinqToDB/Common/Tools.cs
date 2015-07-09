@@ -2,7 +2,7 @@
 using System.Collections;
 using System.IO;
 using System.Reflection;
-
+using System.Text;
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
@@ -74,7 +74,7 @@ namespace LinqToDB.Common
 			try
 			{
 				var uri = new Uri(Uri.EscapeUriString(uriString));
-				var path =
+				var path = 
 					  Uri.UnescapeDataString(uri.AbsolutePath)
 					+ Uri.UnescapeDataString(uri.Query)
 					+ Uri.UnescapeDataString(uri.Fragment);
@@ -86,5 +86,19 @@ namespace LinqToDB.Common
 				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
 			}
 		}
+
+		public static String SafeNullDump(this object obj)
+		{
+			return SafeNullDump(obj, false);
+		}
+
+		public static String SafeNullDump(this object obj, bool includeTypeName)
+		{
+			return new StringBuilder()
+					.Append(obj == null ? "(null)" : obj.ToString())
+					.Append(includeTypeName ? String.Format(" (type: {0})", (obj ?? new object()).GetType().FullName) : "")
+					.ToString();
+		}
+
 	}
 }

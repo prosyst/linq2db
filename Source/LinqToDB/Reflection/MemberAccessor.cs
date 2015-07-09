@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Linq;
+using LinqToDB.Common;
 
 namespace LinqToDB.Reflection
 {
@@ -72,9 +73,9 @@ namespace LinqToDB.Reflection
 
 								return Expression.Block(
 									new[] { local },
-									Expression.Assign(local, next) as Expression,
-									Expression.IfThen(
-										Expression.NotEqual(local, Expression.Constant(null)),
+										Expression.Assign(local, next) as Expression,
+										Expression.IfThen(
+											Expression.NotEqual(local, Expression.Constant(null)),
 										MakeGetter(local, i + 1)));
 							}
 
@@ -220,8 +221,8 @@ namespace LinqToDB.Reflection
 								Expression.Convert(new DefaultValueExpression(ed.MappingSchema, Type), typeof(object))),
 							Type),
 						objParam);
-				}
-				else
+			}
+			else
 					// dynamic columns store was not provided, throw exception when accessed
 					// @mace_windu: why not throw it immediately? Fail fast
 					GetterExpression = Expression.Lambda(
@@ -240,16 +241,16 @@ namespace LinqToDB.Reflection
 
 				if (ed?.DynamicColumnSetter != null)
 				{
-					SetterExpression = Expression.Lambda(
+				SetterExpression = Expression.Lambda(
 						setterType,
 						ed.DynamicColumnSetter.GetBody(
-							objParam,
+					objParam,
 							Expression.Constant(memberInfo.Name),
 							valueParam),
 						objParam,
-						valueParam);
-				}
-				else
+					valueParam);
+			}
+			else
 					// dynamic columns store was not provided, throw exception when accessed
 					// @mace_windu: why not throw it immediately? Fail fast
 					SetterExpression = Expression.Lambda(
@@ -289,7 +290,7 @@ namespace LinqToDB.Reflection
 		{
 			var objParam   = Expression.Parameter(typeof(object), "obj");
 			var getterExpr = GetterExpression.GetBody(Expression.Convert(objParam, TypeAccessor.Type));
-			var getter     = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
+            var getter = Expression.Lambda<Func<object, object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 
 			Getter = getter.Compile();
 
@@ -297,13 +298,13 @@ namespace LinqToDB.Reflection
 
 			if (SetterExpression != null)
 			{
-				var setterExpr = SetterExpression.GetBody(
-					Expression.Convert(objParam, TypeAccessor.Type),
-					Expression.Convert(valueParam, Type));
+			var setterExpr = SetterExpression.GetBody(
+				Expression.Convert(objParam,   TypeAccessor.Type),
+				Expression.Convert(valueParam, Type));
 				var setter = Expression.Lambda<Action<object, object>>(setterExpr, objParam, valueParam);
 
-				Setter = setter.Compile();
-			}
+			Setter = setter.Compile();
+		}
 		}
 
 		static MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
@@ -323,8 +324,8 @@ namespace LinqToDB.Reflection
 		public bool                  IsComplex        { get; private set; }
 		public LambdaExpression      GetterExpression { get; private set; }
 		public LambdaExpression      SetterExpression { get; private set; }
-		public Func  <object,object> Getter           { get; private set; }
-		public Action<object,object> Setter           { get; private set; }
+        public Func<object, object> Getter { get; private set; }
+        public Action<object, object> Setter { get; private set; }
 
 		public string Name
 		{
@@ -343,7 +344,7 @@ namespace LinqToDB.Reflection
 			attrs = attrs.Cast<T>().ToArray();
 #endif
 
-			return attrs.Length > 0? (T)attrs[0]: null;
+            return attrs.Length > 0 ? (T)attrs[0] : null;
 		}
 
 		public T[] GetAttributes<T>() where T : Attribute
@@ -354,14 +355,14 @@ namespace LinqToDB.Reflection
 			attrs = attrs.Cast<T>().ToArray();
 #endif
 
-			return attrs.Length > 0? (T[])attrs: null;
+            return attrs.Length > 0 ? (T[])attrs : null;
 		}
 
 		public object[] GetAttributes()
 		{
 			var attrs = MemberInfo.GetCustomAttributesEx(true);
 
-			return attrs.Length > 0? attrs: null;
+            return attrs.Length > 0 ? attrs : null;
 		}
 
 		public T[] GetTypeAttributes<T>() where T : Attribute
@@ -375,13 +376,29 @@ namespace LinqToDB.Reflection
 
 		public virtual object GetValue(object o)
 		{
+            try
+            {
 			return Getter(o);
 		}
+            catch (Exception e)
+            {
+                throw new InvalidOperationException(String.Format("Failed to Get Value from: {0} - Get Expression: {1}",
+                                                                  o.SafeNullDump(true), this.GetterExpression.ToString()), e);
+            }
+        }
 
 		public virtual void SetValue(object o, object value)
 		{
+            try
+            {
 			Setter(o, value);
 		}
+            catch (Exception e)
+            {
+                throw new InvalidOperationException(String.Format("Failed to Set Value: {0} To: {1} - Set Expression: {2}",
+                                                                  value.SafeNullDump(true), o.SafeNullDump(true), this.SetterExpression.ToString()), e);
+            }
+        }
 
 		#endregion
 	}
