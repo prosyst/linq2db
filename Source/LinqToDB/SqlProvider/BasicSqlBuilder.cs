@@ -257,9 +257,9 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
-		{
+			{
 			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, Indent, SkipAlias);
-		}
+			}
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
@@ -275,7 +275,7 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.HavingClause;  BuildHavingClause(statement.SelectQuery);
 				BuildStep = Step.OrderByClause; BuildOrderByClause(statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;   BuildOffsetLimit(statement.SelectQuery);
-			}
+		}
 
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
@@ -613,7 +613,7 @@ namespace LinqToDB.SqlProvider
 				BuildPhysicalTable(insertClause.Into, null);
 
 				if (addAlias)
-				{
+			{
 					var ts = Statement.SelectQuery.GetTableSource(insertClause.Into);
 					var alias = GetTableAlias(ts);
 					if (alias != null)
@@ -747,8 +747,8 @@ namespace LinqToDB.SqlProvider
 				{
 					StringBuilder.Append("(");
 
-					StringBuilder.Append(targetAlias).Append('.');
-					BuildExpression(key.Column, false, false);
+				StringBuilder.Append(targetAlias).Append('.');
+				BuildExpression(key.Column, false, false);
 					StringBuilder.Append(" IS NULL AND ");
 
 					StringBuilder.Append(sourceAlias).Append('.');
@@ -870,8 +870,8 @@ namespace LinqToDB.SqlProvider
 				{
 					StringBuilder.Append("(");
 
-					StringBuilder.Append(alias).Append('.');
-					BuildExpression(expr.Column, false, false);
+				StringBuilder.Append(alias).Append('.');
+				BuildExpression(expr.Column, false, false);
 					StringBuilder.Append(" IS NULL OR ");
 				}
 
@@ -2289,7 +2289,7 @@ namespace LinqToDB.SqlProvider
 						var e = (SqlExpression)expr;
 
 						BuildFormatValues(e.Expr, e.Parameters, () => GetPrecedence(e));
-					}
+							}
 
 					break;
 
@@ -2552,7 +2552,7 @@ namespace LinqToDB.SqlProvider
 			if (!string.IsNullOrEmpty(type.DbType))
 				StringBuilder.Append(type.DbType);
 			else
-				StringBuilder.Append(type.DataType);
+			StringBuilder.Append(type.DataType);
 
 			if (type.Length > 0)
 				StringBuilder.Append('(').Append(type.Length).Append(')');
@@ -3245,7 +3245,7 @@ namespace LinqToDB.SqlProvider
 			return sb;
 		}
 
-		public string ApplyQueryHints(string sql, List<string> queryHints)
+		public virtual string ApplyQueryHints(string sql, List<string> queryHints)
 		{
 			var sb = new StringBuilder();
 
@@ -3257,7 +3257,7 @@ namespace LinqToDB.SqlProvider
 
 			foreach (var hint in queryHints)
 				if (!(hint?.Length >= 2 && hint.StartsWith("**")))
-					sb.AppendLine(hint);
+				sb.AppendLine(hint);
 
 			return sb.ToString();
 		}
@@ -3271,7 +3271,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var database = entity.DatabaseName;
 			var schema   = entity.SchemaName;
-			var table    = entity.TableName;
+			var table    =  entity.TableName;
 
 			var columnName = Convert(column.ColumnName, ConvertType.NameToQueryField);
 			var tableName  = BuildTableName(
