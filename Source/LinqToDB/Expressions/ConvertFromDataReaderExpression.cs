@@ -58,8 +58,8 @@ namespace LinqToDB.Expressions
 
 				switch (l.Parameters.Count)
 				{
-					case 1 : ex = l.GetBody(dataReaderExpr);                break;
-					case 2 : ex = l.GetBody(dataReaderExpr, Constant(idx)); break;
+                    case 1: ex = l.GetBody(dataReaderExpr); break;
+                    case 2: ex = l.GetBody(dataReaderExpr, Constant(idx)); break;
 				}
 			}
 
@@ -199,7 +199,7 @@ namespace LinqToDB.Expressions
 				*/
 			}
 
-			readonly ConcurrentDictionary<Type,Func<IDataReader,object>> _columnConverters = new ConcurrentDictionary<Type,Func<IDataReader,object>>();
+            readonly ConcurrentDictionary<Type, Func<IDataReader, object>> _columnConverters = new ConcurrentDictionary<Type, Func<IDataReader, object>>();
 
 			readonly IDataContext  _dataContext;
 			readonly MappingSchema _mappingSchema;
@@ -211,7 +211,7 @@ namespace LinqToDB.Expressions
 		public override string ToString()
 		{
 			return $"ConvertFromDataReaderExpression<{_type.Name}>({_idx})";
-		}
+	}
 
 		public ConvertFromDataReaderExpression MakeNullable()
 		{
@@ -219,7 +219,7 @@ namespace LinqToDB.Expressions
 			{
 				var type = typeof(Nullable<>).MakeGenericType(Type);
 				return new ConvertFromDataReaderExpression(type, _idx, _dataReaderParam, _dataContext);
-			}
+}
 
 			return this;
 		}
