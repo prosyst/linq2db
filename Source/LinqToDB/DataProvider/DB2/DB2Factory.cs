@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.DB2
 	using Configuration;
 
 	[UsedImplicitly]
-	class DB2Factory : IDataProviderFactory
+    public class DB2Factory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

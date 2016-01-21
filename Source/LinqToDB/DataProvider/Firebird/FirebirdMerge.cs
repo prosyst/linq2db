@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
 
-	class FirebirdMerge : BasicMerge
+    class FirebirdMerge : BasicMerge
 	{
 		protected override bool BuildUsing<T>(DataConnection dataConnection, IEnumerable<T> source)
 		{

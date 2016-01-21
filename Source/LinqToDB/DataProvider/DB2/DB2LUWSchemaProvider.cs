@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.DB2
 	using Data;
 	using SchemaProvider;
 
-	class DB2LUWSchemaProvider : SchemaProviderBase
+    public class DB2LUWSchemaProvider : SchemaProviderBase
 	{
 		readonly HashSet<string> _systemSchemas =
 			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
@@ -84,15 +84,15 @@ namespace LinqToDB.DataProvider.DB2
 						name = rd.ToString(2),
 						cols = rd.ToString(3).Split('+').Skip(1).ToArray(),
 					},@"
-SELECT
-	TABSCHEMA,
-	TABNAME,
-	INDNAME,
-	COLNAMES
-FROM
-	SYSCAT.INDEXES
-WHERE
-	UNIQUERULE = 'P' AND " + GetSchemaFilter("TABSCHEMA"))
+					SELECT
+						TABSCHEMA,
+						TABNAME,
+						INDNAME,
+						COLNAMES
+					FROM
+						SYSCAT.INDEXES
+					WHERE
+						UNIQUERULE = 'P' AND " + GetSchemaFilter("TABSCHEMA"))
 				from col in pk.cols.Select((c,i) => new { c, i })
 				select new PrimaryKeyInfo
 				{
@@ -109,22 +109,22 @@ WHERE
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
 			var sql = @"
-SELECT
-	TABSCHEMA,
-	TABNAME,
-	COLNAME,
-	LENGTH,
-	SCALE,
-	NULLS,
-	IDENTITY,
-	COLNO,
-	TYPENAME,
-	REMARKS,
-	CODEPAGE
-FROM
-	SYSCAT.COLUMNS
-WHERE
-	" + GetSchemaFilter("TABSCHEMA");
+				SELECT
+					TABSCHEMA,
+					TABNAME,
+					COLNAME,
+					LENGTH,
+					SCALE,
+					NULLS,
+					IDENTITY,
+					COLNO,
+					TYPENAME,
+					REMARKS,
+					CODEPAGE
+				FROM
+					SYSCAT.COLUMNS
+				WHERE
+					" + GetSchemaFilter("TABSCHEMA");
 
 			return _columns = dataConnection.Query(rd =>
 				{
@@ -193,18 +193,18 @@ WHERE
 					otherTable   = dataConnection.Connection.Database + "." + rd.ToString(4)  + "." + rd.ToString(5),
 					otherColumns = rd.ToString(6),
 				},@"
-SELECT
-	CONSTNAME,
-	TABSCHEMA,
-	TABNAME,
-	FK_COLNAMES,
-	REFTABSCHEMA,
-	REFTABNAME,
-	PK_COLNAMES
-FROM
-	SYSCAT.REFERENCES
-WHERE
-	" + GetSchemaFilter("TABSCHEMA"))
+					SELECT
+						CONSTNAME,
+						TABSCHEMA,
+						TABNAME,
+						FK_COLNAMES,
+						REFTABSCHEMA,
+						REFTABNAME,
+						PK_COLNAMES
+					FROM
+						SYSCAT.REFERENCES
+					WHERE
+						" + GetSchemaFilter("TABSCHEMA"))
 				.SelectMany(fk =>
 				{
 					var thisTable    = _columns.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Name.Length).ToList();
@@ -363,17 +363,17 @@ WHERE
 			var str = dbConnection.ConnectionString;
 
 			var host = str?.Split(';')
-				.Select(s =>
-				{
-					var ss = s.Split('=');
-					return new { key = ss.Length == 2 ? ss[0] : "", value = ss.Length == 2 ? ss[1] : "" };
-				})
-				.Where (s => s.key.ToUpper() == "SERVER")
-				.Select(s => s.value)
-				.FirstOrDefault();
+					.Select(s =>
+					{
+						var ss = s.Split('=');
+						return new { key = ss.Length == 2 ? ss[0] : "", value = ss.Length == 2 ? ss[1] : "" };
+					})
+					.Where (s => s.key.ToUpper() == "SERVER")
+					.Select(s => s.value)
+					.FirstOrDefault();
 
-			if (host != null)
-				return host;
+				if (host != null)
+					return host;
 
 			return base.GetDataSourceName(dbConnection);
 		}
@@ -383,13 +383,13 @@ WHERE
 			LoadCurrentSchema(dataConnection);
 
 			var sql = @"
-SELECT
-	PROCSCHEMA,
-	PROCNAME
-FROM
-	SYSCAT.PROCEDURES
-WHERE
-	" + GetSchemaFilter("PROCSCHEMA");
+				SELECT
+					PROCSCHEMA,
+					PROCNAME
+				FROM
+					SYSCAT.PROCEDURES
+				WHERE
+					" + GetSchemaFilter("PROCSCHEMA");
 
 			if (IncludedSchemas.Count == 0)
 				sql += " AND PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')";
@@ -446,20 +446,20 @@ WHERE
 
 					return ppi;
 				},@"
-SELECT
-	PROCSCHEMA,
-	PROCNAME,
-	PARMNAME,
-	TYPENAME,
-	PARM_MODE,
+					SELECT
+						PROCSCHEMA,
+						PROCNAME,
+						PARMNAME,
+						TYPENAME,
+						PARM_MODE,
 
-	ORDINAL,
-	LENGTH,
-	SCALE
-FROM
-	SYSCAT.PROCPARMS
-WHERE
-	" + GetSchemaFilter("PROCSCHEMA"))
+						ORDINAL,
+						LENGTH,
+						SCALE
+					FROM
+						SYSCAT.PROCPARMS
+					WHERE
+						" + GetSchemaFilter("PROCSCHEMA"))
 				.ToList();
 		}
 

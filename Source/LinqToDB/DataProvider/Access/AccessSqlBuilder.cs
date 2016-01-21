@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Access
 	using SqlQuery;
 	using SqlProvider;
 
-	class AccessSqlBuilder : BasicSqlBuilder
+	public class AccessSqlBuilder : BasicSqlBuilder
 	{
 		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -40,8 +40,8 @@ namespace LinqToDB.DataProvider.Access
 			}
 			else
 			{
-				StringBuilder.AppendLine("SELECT @@IDENTITY");
-			}
+			StringBuilder.AppendLine("SELECT @@IDENTITY");
+		}
 		}
 
 		public override bool IsNestedJoinSupported => false;
@@ -61,38 +61,38 @@ namespace LinqToDB.DataProvider.Access
 			{
 				if (NeedSkip(selectQuery))
 				{
-					AlternativeBuildSql2(base.BuildSql);
-					return;
-				}
+				AlternativeBuildSql2(base.BuildSql);
+				return;
+			}
 
 				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)
-				{
+			{
 					if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
-					{
+				{
 						if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SqlSearchCondition sc)
-						{
-							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
-							{
-								if (p.Function.Name == "EXISTS")
-								{
-									BuildAnyAsCount(selectQuery);
-									return;
-								}
-							}
-						}
-					}
-					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition sc)
 					{
-						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
+							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
 						{
 							if (p.Function.Name == "EXISTS")
 							{
-								BuildAnyAsCount(selectQuery);
+									BuildAnyAsCount(selectQuery);
 								return;
 							}
 						}
 					}
 				}
+					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition sc)
+				{
+						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
+					{
+						if (p.Function.Name == "EXISTS")
+						{
+								BuildAnyAsCount(selectQuery);
+							return;
+						}
+					}
+				}
+			}
 			}
 
 			base.BuildSql();
@@ -268,7 +268,7 @@ namespace LinqToDB.DataProvider.Access
 
 						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
 						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-							new SqlFunction(func.SystemType, func.Name, parms)));
+						              new SqlFunction(func.SystemType, func.Name, parms)));
 						return;
 					}
 
@@ -371,7 +371,7 @@ namespace LinqToDB.DataProvider.Access
 
 					return "[" + value + "]";
 
-				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
 					if (value != null)

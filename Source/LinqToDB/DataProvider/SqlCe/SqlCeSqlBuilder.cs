@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SqlQuery;
 	using SqlProvider;
 
-	class SqlCeSqlBuilder : BasicSqlBuilder
+	public class SqlCeSqlBuilder : BasicSqlBuilder
 	{
 		public SqlCeSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -88,10 +88,10 @@ namespace LinqToDB.DataProvider.SqlCe
 							.Append(type.DataType)
 							.Append("(4000)");
 						return;
-					}
+			}
 
 					break;
-			}
+		}
 
 			base.BuildDataType(type, createDbType);
 		}
@@ -100,7 +100,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			if (!statement.IsUpdate())
 				base.BuildFromClause(statement, selectQuery);
-		}
+			}
 
 		protected override void BuildColumnExpression(SelectQuery selectQuery, ISqlExpression expr, string alias, ref bool addAlias)
 		{
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					wrap = true;
 				else
 					wrap = expr is SqlExpression ex && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlSearchCondition;
-			}
+				}
 
 			if (wrap) StringBuilder.Append("CASE WHEN ");
 			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);

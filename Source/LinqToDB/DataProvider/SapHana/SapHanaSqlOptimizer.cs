@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlProvider;
 	using SqlQuery;
 
-	class SapHanaSqlOptimizer : BasicSqlOptimizer
+	public class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{
 		public SapHanaSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

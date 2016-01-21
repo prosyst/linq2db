@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Data;
 	using SchemaProvider;
 
-	class FirebirdSchemaProvider : SchemaProviderBase
+    public class FirebirdSchemaProvider : SchemaProviderBase
 	{
 		protected override string GetDatabaseName(DbConnection dbConnection)
 		{

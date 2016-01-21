@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 	using SqlQuery;
 
-	class SqlServerSqlOptimizer : BasicSqlOptimizer
+	public class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
 		public SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

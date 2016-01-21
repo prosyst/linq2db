@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlProvider;
 	using System.Globalization;
 
-	class InformixSqlBuilder : BasicSqlBuilder
+    public class InformixSqlBuilder : BasicSqlBuilder
 	{
 		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -40,8 +40,8 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			else
 			{
-				StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
-			}
+			StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
+		}
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

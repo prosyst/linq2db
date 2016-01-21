@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SchemaProvider;
 	using System.Data;
 
-	class SqlServerSchemaProvider : SchemaProviderBase
+	public class SqlServerSchemaProvider : SchemaProviderBase
 	{
 		bool _isAzure;
 		int _compatibilityLevel;

@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Configuration;
 
 	[UsedImplicitly]
-	class SQLiteFactory: IDataProviderFactory
+	public class SQLiteFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

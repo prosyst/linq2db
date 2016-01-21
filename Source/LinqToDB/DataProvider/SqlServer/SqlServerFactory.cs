@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Configuration;
 
 	[UsedImplicitly]
-	class SqlServerFactory : IDataProviderFactory
+	public class SqlServerFactory : IDataProviderFactory
 	{
 		#region IDataProviderFactory Implementation
 

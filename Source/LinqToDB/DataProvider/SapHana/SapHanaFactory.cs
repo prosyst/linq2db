@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Configuration;
 
 	[UsedImplicitly]
-	class SapHanaFactory : IDataProviderFactory
+	public class SapHanaFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

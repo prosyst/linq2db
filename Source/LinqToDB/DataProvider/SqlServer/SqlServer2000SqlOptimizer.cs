@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 	using SqlQuery;
 
-	class SqlServer2000SqlOptimizer : SqlServerSqlOptimizer
+	public class SqlServer2000SqlOptimizer : SqlServerSqlOptimizer
 	{
 		public SqlServer2000SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Access
 	using SchemaProvider;
 	using System.Data.OleDb;
 
-	class AccessSchemaProvider : SchemaProviderBase
+    public class AccessSchemaProvider : SchemaProviderBase
 	{
 		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
 		// we create separate connection for GetSchema calls to workaround provider bug

@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlQuery;
 	using SqlProvider;
 
-	class SybaseSqlBuilder : BasicSqlBuilder
+	public class SybaseSqlBuilder : BasicSqlBuilder
 	{
 		public SybaseSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)

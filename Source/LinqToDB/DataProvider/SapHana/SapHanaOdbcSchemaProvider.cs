@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Data;
 	using SchemaProvider;
 
-	class SapHanaOdbcSchemaProvider:SapHanaSchemaProvider
+	public class SapHanaOdbcSchemaProvider : SapHanaSchemaProvider
 	{
 		private String _dataSourceName;
 		private String _databaseName;

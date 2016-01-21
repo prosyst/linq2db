@@ -8,13 +8,13 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlQuery;
 	using SqlProvider;
 
-	class SapHanaSqlBuilder : BasicSqlBuilder
+	public class SapHanaSqlBuilder : BasicSqlBuilder
 	{
 		public SapHanaSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
-
+		
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity() ? 2 : 1;
@@ -28,14 +28,14 @@ namespace LinqToDB.DataProvider.SapHana
 				var identityField = insertClause.Into.GetIdentityField();
 				var table = insertClause.Into;
 
-				if (identityField == null || table == null)
+			if (identityField == null || table == null)
 					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
-				StringBuilder.Append("SELECT MAX(");
-				BuildExpression(identityField, false, true);
-				StringBuilder.Append(") FROM ");
-				BuildPhysicalTable(table, null);
-			}
+			StringBuilder.Append("SELECT MAX(");
+			BuildExpression(identityField, false, true);
+			StringBuilder.Append(") FROM ");
+			BuildPhysicalTable(table, null);
+		}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			return "LIMIT {0}";
 		}
-
+		
 		protected override string OffsetFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.TakeValue == null ? "LIMIT 4200000000 OFFSET {0}" : "OFFSET {0}";
@@ -97,10 +97,10 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.Time:
 					StringBuilder.Append("Timestamp");
 					return;
-				case DataType.SmallDateTime :
+				case DataType.SmallDateTime : 
 					StringBuilder.Append("SecondDate");
 					return;
-				case DataType.Boolean       :
+				case DataType.Boolean       : 
 					StringBuilder.Append("TinyInt");
 					return;
 				case DataType.Image:
@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SapHana
 					}
 					break;
 			}
-			base.BuildDataType(type, createDbType);
+			base.BuildDataType(type, createDbType); 
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
@@ -236,7 +236,7 @@ namespace LinqToDB.DataProvider.SapHana
 			func = ConvertFunctionParameters(func);
 			switch (func.Name)
 			{
-				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0);
+				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0); 
 					break;
 			}
 			base.BuildFunction(func);
@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.SapHana
 		//this is for Tests.Linq.Common.CoalesceLike test
 		static SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
 		{
-			var len  = parameters.Length - start;
+			var len = parameters.Length - start;
 			var cond = parameters[start];
 
 			if (start == 0 && SqlExpression.NeedsEqual(cond))

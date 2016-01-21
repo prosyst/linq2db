@@ -9,13 +9,13 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlQuery;
 	using SqlProvider;
 
-	class SapHanaOdbcSqlBuilder : BasicSqlBuilder
+	public class SapHanaOdbcSqlBuilder : BasicSqlBuilder
 	{
 		public SapHanaOdbcSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
-
+		
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity() ? 2 : 1;
@@ -29,14 +29,14 @@ namespace LinqToDB.DataProvider.SapHana
 				var identityField = insertClause.Into.GetIdentityField();
 				var table = insertClause.Into;
 
-				if (identityField == null || table == null)
+			if (identityField == null || table == null)
 					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
-				StringBuilder.Append("SELECT MAX(");
-				BuildExpression(identityField, false, true);
-				StringBuilder.Append(") FROM ");
-				BuildPhysicalTable(table, null);
-			}
+			StringBuilder.Append("SELECT MAX(");
+			BuildExpression(identityField, false, true);
+			StringBuilder.Append(") FROM ");
+			BuildPhysicalTable(table, null);
+		}
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			return "LIMIT {0}";
 		}
-
+		
 		protected override string OffsetFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.TakeValue == null ? "LIMIT 4200000000 OFFSET {0}" : "OFFSET {0}";
@@ -96,18 +96,18 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.Money         :
 					StringBuilder.Append("Decimal(19,4)");
 					break;
-				case DataType.SmallMoney    :
+				case DataType.SmallMoney    : 
 					StringBuilder.Append("Decimal(10,4)");
 					break;
 				case DataType.DateTime2     :
 				case DataType.DateTime      :
 				case DataType.Time:
 					StringBuilder.Append("Timestamp");
-					break;
-				case DataType.SmallDateTime :
+					break;                
+				case DataType.SmallDateTime : 
 					StringBuilder.Append("SecondDate");
 					break;
-				case DataType.Boolean       :
+				case DataType.Boolean       : 
 					StringBuilder.Append("TinyInt");
 					break;
 				case DataType.Image:
@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.SapHana
 					StringBuilder.Append("Char (36)");
 					break;
 				default:
-					base.BuildDataType(type, createDbType);
+					base.BuildDataType(type, createDbType); 
 					break;
 			}
 		}
@@ -237,7 +237,7 @@ namespace LinqToDB.DataProvider.SapHana
 			func = ConvertFunctionParameters(func);
 			switch (func.Name)
 			{
-				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0);
+				case "CASE": func = ConvertCase(func.SystemType, func.Parameters, 0); 
 					break;
 			}
 			base.BuildFunction(func);

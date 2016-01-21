@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Configuration;
 
 	[UsedImplicitly]
-	class FirebirdFactory: IDataProviderFactory
+    public class FirebirdFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.Informix
 {
 	using Data;
 
-	class InformixMerge : BasicMerge
+    class InformixMerge : BasicMerge
 	{
 		protected override bool BuildUsing<T>(DataConnection dataConnection, IEnumerable<T> source)
 		{

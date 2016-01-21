@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Data;
 
-	class MySqlBulkCopy : BasicBulkCopy
+    class MySqlBulkCopy : BasicBulkCopy
 	{
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)

@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using Configuration;
 
 	[UsedImplicitly]
-	class SybaseFactory : IDataProviderFactory
+	public class SybaseFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

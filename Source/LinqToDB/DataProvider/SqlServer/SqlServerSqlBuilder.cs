@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract class SqlServerSqlBuilder : BasicSqlBuilder
+	public abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
 		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)

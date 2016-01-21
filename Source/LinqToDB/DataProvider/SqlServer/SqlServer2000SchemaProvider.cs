@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Data;
 	using SchemaProvider;
 
-	class SqlServer2000SchemaProvider : SqlServerSchemaProvider
+	public class SqlServer2000SchemaProvider : SqlServerSchemaProvider
 	{
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{

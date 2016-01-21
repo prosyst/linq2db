@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Data;
 	using SchemaProvider;
 
-	class SQLiteSchemaProvider : SchemaProviderBase
+	public class SQLiteSchemaProvider : SchemaProviderBase
 	{
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
