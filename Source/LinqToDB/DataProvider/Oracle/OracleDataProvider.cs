@@ -387,7 +387,21 @@ namespace LinqToDB.DataProvider.Oracle
             this._setBindByName            = templateProvider._setBindByName;
             this._createOracleTimeStampTZ  = templateProvider._createOracleTimeStampTZ;
 
-            this._oracleRef = templateProvider._oracleRef;
+			this._oracleRef = templateProvider._oracleRef;
+			this._setSingle				  = templateProvider._setSingle			;
+			this._setDouble				  = templateProvider._setDouble			;
+			this._setText				  = templateProvider._setText			;
+			this._setNText				  = templateProvider._setNText			;
+			this._setImage				  = templateProvider._setImage			;
+			this._setBinary				  = templateProvider._setBinary			;
+			this._setVarBinary			  = templateProvider._setVarBinary		;
+			this._setDate				  = templateProvider._setDate			;
+			this._setSmallDateTime		  = templateProvider._setSmallDateTime	;
+			this._setDateTime2			  = templateProvider._setDateTime2		;
+			this._setDateTimeOffset		  = templateProvider._setDateTimeOffset	; 
+			this._setGuid				  = templateProvider._setGuid			;
+			this._setCursor = templateProvider._setCursor;
+
             this._oracleXmlType = templateProvider._oracleXmlType;
             this._oracleXmlStream = templateProvider._oracleXmlStream;
 
