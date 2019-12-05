@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using Extensions;
 
-	class OracleBulkCopy : BasicBulkCopy
+	public class OracleBulkCopy : BasicBulkCopy
 	{
 		public OracleBulkCopy(OracleDataProvider dataProvider, Type connectionType)
 		{

@@ -288,43 +288,50 @@ namespace LinqToDB.Reflection
 
 		void SetExpressions()
 		{
-			var objParam   = Expression.Parameter(typeof(object), "obj");
+			var objParam = Expression.Parameter(typeof(object), "obj");
 			var getterExpr = GetterExpression.GetBody(Expression.Convert(objParam, TypeAccessor.Type));
-            var getter = Expression.Lambda<Func<object, object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
-            try 
-            {
-			Getter = getter.Compile();
-            } 
-            catch (Exception e)
-            {
-                ThrowCompileException(getter, e, true);
-            }
-            
+			var getter = Expression.Lambda<Func<object, object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
+			try
+			{
+				Getter = getter.Compile();
+			}
+			catch (Exception e)
+			{
+				ThrowCompileException(getter, e, true);
+			}
 
 			var valueParam = Expression.Parameter(typeof(object), "value");
 
 			if (SetterExpression != null)
 			{
-			var setterExpr = SetterExpression.GetBody(
-				Expression.Convert(objParam,   TypeAccessor.Type),
-				Expression.Convert(valueParam, Type));
-            var setter = Expression.Lambda<Action<object, object>>(setterExpr, objParam, valueParam);
-			try
-			{
-				Setter = setter.Compile();
+				var setterExpr = SetterExpression.GetBody(
+					Expression.Convert(objParam, TypeAccessor.Type),
+					Expression.Convert(valueParam, Type));
+				var setter = Expression.Lambda<Action<object, object>>(setterExpr, objParam, valueParam);
+				try
+				{
+					Setter = setter.Compile();
+				}
+				catch (Exception e)
+				{
+					ThrowCompileException(setter, e, false);
+				}
 			}
-			catch (Exception e)
+
+			void ThrowCompileException(Expression expression, Exception e, bool isGetter)
 			{
-				ThrowCompileException(setter, e, false);
+				string message = String.Format("Failed to compile {0} expression for '{1}'. Expression: {2}",
+												(isGetter ? "Getter" : "Setter"), this.Name, expression.ToString()
+											   );
+				throw new InvalidOperationException(message, e);
 			}
 		}
 
-		void ThrowCompileException(Expression expression, Exception e, bool isGetter)
+		static MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
+		static T ThrowOnDynamicStoreMissing<T>()
 		{
-			string message = String.Format("Failed to compile {0} expression for '{1}'. Expression: {2}",
-											(isGetter ? "Getter" : "Setter"), this.Name, expression.ToString()
-										);
-			throw new InvalidOperationException(message, e);
+			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");
+
 		}
 
 		#region Public Properties

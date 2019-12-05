@@ -1488,17 +1488,20 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping descriptor.</returns>
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
-			var key = new { Type = type, ConfigurationID };
-			var ed = EntityDescriptorsCache.GetOrCreate(key,
-				o =>
-				{
-					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-					var edNew = new EntityDescriptor(this, type);
-					EntityDescriptorCreatedCallback?.Invoke(this, edNew);
-					return edNew;
-				});
+			lock (EntityDescriptorsCache)
+			{
+				var key = new { Type = type, ConfigurationID };
+				var ed = EntityDescriptorsCache.GetOrCreate(key,
+					o =>
+					{
+						o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+						var edNew = new EntityDescriptor(this, type);
+						EntityDescriptorCreatedCallback?.Invoke(this, edNew);
+						return edNew;
+					});
 
-			return ed;
+				return ed;
+			}
 		}
 
 		// TODO: V3 cleanup
