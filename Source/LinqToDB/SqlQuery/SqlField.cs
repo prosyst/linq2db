@@ -38,7 +38,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlField(ColumnDescriptor column)
 		{
-			SystemType       = column.MemberType;
+			Type             = new DbDataType(column.MemberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
 			Name             = column.MemberName;
 			PhysicalName     = column.ColumnName;
 			CanBeNull        = column.CanBeNull;
@@ -47,35 +47,27 @@ namespace LinqToDB.SqlQuery
 			IsIdentity       = column.IsIdentity;
 			IsInsertable     = !column.SkipOnInsert;
 			IsUpdatable      = !column.SkipOnUpdate;
-			DataType         = column.DataType;
-			DbType           = column.DbType;
-			Length           = column.Length;
-			Precision        = column.Precision;
-			Scale            = column.Scale;
+			SkipOnEntityFetch = column.SkipOnEntityFetch;
 			CreateFormat     = column.CreateFormat;
 			CreateOrder      = column.Order;
 			ColumnDescriptor = column;
 		}
 
-		public Type             SystemType       { get; set; }
-		public string           Alias            { get; set; }
-		public string           Name             { get; set; }
-		public bool             IsPrimaryKey     { get; set; }
-		public int              PrimaryKeyOrder  { get; set; }
-		public bool             IsIdentity       { get; set; }
-		public bool             IsInsertable     { get; set; }
-		public bool             IsUpdatable      { get; set; }
-		public bool             IsDynamic        { get; set; }
-		public DataType         DataType         { get; set; }
-		public string           DbType           { get; set; }
-		public int?             Length           { get; set; }
-		public int?             Precision        { get; set; }
-		public int?             Scale            { get; set; }
-		public string           CreateFormat     { get; set; }
-		public int?             CreateOrder      { get; set; }
+		public DbDataType?       Type             { get; set; }
+		public string?           Alias            { get; set; }
+		public string            Name             { get; set; } = null!; // not always true, see ColumnDescriptor notes
+		public bool              IsPrimaryKey     { get; set; }
+		public int               PrimaryKeyOrder  { get; set; }
+		public bool              IsIdentity       { get; set; }
+		public bool              IsInsertable     { get; set; }
+		public bool              IsUpdatable      { get; set; }
+		public bool              IsDynamic        { get; set; }
+		public bool              SkipOnEntityFetch { get; set; }
+		public string?           CreateFormat     { get; set; }
+		public int?              CreateOrder      { get; set; }
 
-		public ISqlTableSource  Table            { get; set; }
-		public ColumnDescriptor ColumnDescriptor { get; set; }
+		public ISqlTableSource?  Table            { get; set; }
+		public ColumnDescriptor  ColumnDescriptor { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
 
 		private string _physicalName;
 		public  string  PhysicalName

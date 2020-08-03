@@ -713,31 +713,48 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToSql
 
-			public virtual SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
+			public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
 				{
 					case ConvertFlags.All   :
 						{
-							var table = FindTable(expression, level, false, true);
+							var contextInfo = FindContextExpression(expression, level, false, true)!;
 
-							if (table.Field == null)
+							if (contextInfo.Field == null)
 							{
-								// Handling case with Associations. Needs refactoring
-								if (table.Table != this)
+								SqlInfo[] result;
+
+								if (!IsScalarSet())
 								{
-									return table.Table.ConvertToSql(null, level, flags);
+									// Handling case with Associations
+									//
+									if (contextInfo.Context != this)
+									{
+										result = contextInfo.Context.ConvertToIndex(contextInfo.CurrentExpression, contextInfo.CurrentLevel, flags);
+									}
+									else
+									
+									{
+										result = SqlTable.Fields.Values
+											.Where(field => !field.IsDynamic && !field.SkipOnSelectAll)
+											.Select(f =>
+												f.ColumnDescriptor != null
+													? new SqlInfo(f.ColumnDescriptor.MemberInfo, f)
+													: new SqlInfo(f))
+											.ToArray();
+									}
+
+								}
+								else
+								{
+									result = new[]
+									{
+										new SqlInfo(SqlTable) 
+									};
 								}
 
-								var fields = table.Table.SqlTable.Fields.Values
-										.Where(f => !f.IsDynamic)
-										.Select(f =>
-											f.ColumnDescriptor != null
-												? new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f }
-												: new SqlInfo { Sql = f })
-									.ToArray();
-
-								return fields;
+								return result;
 							}
 							break;
 						}
