@@ -40,15 +40,16 @@ namespace LinqToDB.Mapping
 				MemberType       = propertyInfo.PropertyType;
 			}
 
-			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
-			ColumnName      = columnAttribute.Name       ?? MemberInfo.Name;
-			Storage         = columnAttribute.Storage;
-			PrimaryKeyOrder = columnAttribute.PrimaryKeyOrder;
-			IsDiscriminator = columnAttribute.IsDiscriminator;
+
+			MemberName        = columnAttribute.MemberName ?? MemberInfo.Name;
+			ColumnName        = columnAttribute.Name       ?? MemberInfo.Name;
+			Storage           = columnAttribute.Storage;
+			PrimaryKeyOrder   = columnAttribute.PrimaryKeyOrder;
+			IsDiscriminator   = columnAttribute.IsDiscriminator;
 			SkipOnEntityFetch = columnAttribute.SkipOnEntityFetch;
-			DataType        = columnAttribute.DataType;
-			DbType          = columnAttribute.DbType;
-			CreateFormat    = columnAttribute.CreateFormat;
+			DataType          = columnAttribute.DataType;
+			DbType            = columnAttribute.DbType;
+			CreateFormat      = columnAttribute.CreateFormat;
 
 			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
@@ -249,7 +250,7 @@ namespace LinqToDB.Mapping
 		public bool           SkipOnInsert    { get; private set; }
 
 		/// <summary>
-		/// Gets whether a column must be explicitly defined in a Select statement to be fetched. If true, a "SELECT *"-ish statement won't retrieve this column.
+		/// Gets whether a column must be explicitly defined in a Select statement to be fetched. If <c>true</c>, a "SELECT *"-ish statement won't retrieve this column.
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public bool           SkipOnEntityFetch { get; }

@@ -11,8 +11,7 @@ namespace Tests.Playground
 		[Table("Person")]
 		public class PersonEx
 		{
-			[Column("PersonID")]
-			[Column("PersonID", Configuration=ProviderName.SQLiteClassic, SkipOnEntityFetch=true)]
+			[Column("PersonID", SkipOnEntityFetch=true)]
 			public int? ID;
 
 			[Column]
@@ -22,21 +21,19 @@ namespace Tests.Playground
 			public string? LastName { get; set; }
 		}
 
-		[TestCase(ProviderName.SQLiteMS, true)]
-		[TestCase(ProviderName.SQLiteClassic, false)]
-		public void SelectFullEntityWithSkipColumn(string context, bool shouldRetrieveID)
+		public void SelectFullEntityWithSkipColumn([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var allPeople = db.GetTable<PersonEx>().ToArray();
-				var allGotId = allPeople.All(p => p.ID != null);
-				Assert.AreEqual(shouldRetrieveID, allGotId);
+				var anyGotId = allPeople.Any(p => p.ID != null);
+				Assert.IsFalse(anyGotId);
 
 				var allPeopleWithCondition = db.GetTable<PersonEx>()
 												.Where(p => (p.ID ?? 0) >= 2)
 												.ToArray();
-				var allWithCondGotId = allPeopleWithCondition.All(p => p.ID != null);
-				Assert.AreEqual(shouldRetrieveID, allWithCondGotId);
+				var anyWithCondGotId = allPeopleWithCondition.Any(p => p.ID != null);
+				Assert.IsFalse(anyWithCondGotId);
 
 				var allAnonymWithExplicitSelect = db.GetTable<PersonEx>()
 													.Select(p => new {p.ID, p.FirstName,p.LastName});
