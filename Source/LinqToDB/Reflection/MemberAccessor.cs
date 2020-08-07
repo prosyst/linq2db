@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -49,7 +49,7 @@ namespace LinqToDB.Reflection
 				var lastInfo = infos[infos.Length - 1];
 
 				MemberInfo = lastInfo.member;
-				Type       = lastInfo.type;
+				Type = lastInfo.type;
 
 				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClass || info.type.IsNullable());
 
@@ -189,7 +189,7 @@ namespace LinqToDB.Reflection
 		void SetSimple(MemberInfo memberInfo, EntityDescriptor? ed)
 		{
 			MemberInfo = memberInfo;
-			Type       = MemberInfo is PropertyInfo propertyInfo ? propertyInfo.PropertyType : ((FieldInfo)MemberInfo).FieldType;
+			Type = MemberInfo is PropertyInfo propertyInfo ? propertyInfo.PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
 			if (memberInfo is PropertyInfo info)
 			{
@@ -294,7 +294,7 @@ namespace LinqToDB.Reflection
 			var getter     = Expression.Lambda<Func<object,object?>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 			try
 			{
-			Getter = getter.Compile();
+				Getter = getter.Compile();
 			}
 			catch (Exception e)
 			{
@@ -311,15 +311,14 @@ namespace LinqToDB.Reflection
 				var setter = Expression.Lambda<Action<object, object?>>(setterExpr, objParam, valueParam);
 				try
 				{
-				Setter = setter.Compile();
-			}
+					Setter = setter.Compile();
+				}
 				catch (Exception e)
 				{
 					ThrowCompileException(setter, e, false);
-		}
+				}
 			}
 
-		static readonly MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
 			void ThrowCompileException(Expression expression, Exception e, bool isGetter)
 			{
 				string message = String.Format("Failed to compile {0} expression for '{1}'. Expression: {2}",
@@ -329,6 +328,7 @@ namespace LinqToDB.Reflection
 			}
 		}
 
+		static readonly MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
 		static T ThrowOnDynamicStoreMissing<T>()
 		{
 			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");
@@ -337,16 +337,16 @@ namespace LinqToDB.Reflection
 
 		#region Public Properties
 
-		public MemberInfo              MemberInfo       { get; private set; } = null!;
-		public TypeAccessor            TypeAccessor     { get; private set; }
-		public bool                    HasGetter        { get; private set; }
-		public bool                    HasSetter        { get; private set; }
-		public Type                    Type             { get; private set; } = null!;
-		public bool                    IsComplex        { get; private set; }
-		public LambdaExpression        GetterExpression { get; private set; } = null!;
-		public LambdaExpression?       SetterExpression { get; private set; }
-		public Func  <object,object?>? Getter           { get; private set; }
-		public Action<object,object?>? Setter           { get; private set; }
+		public MemberInfo MemberInfo { get; private set; } = null!;
+		public TypeAccessor TypeAccessor { get; private set; }
+		public bool HasGetter { get; private set; }
+		public bool HasSetter { get; private set; }
+		public Type Type { get; private set; } = null!;
+		public bool IsComplex { get; private set; }
+		public LambdaExpression GetterExpression { get; private set; } = null!;
+		public LambdaExpression? SetterExpression { get; private set; }
+		public Func<object, object?>? Getter { get; private set; }
+		public Action<object, object?>? Setter { get; private set; }
 
 		public string Name
 		{
@@ -362,21 +362,21 @@ namespace LinqToDB.Reflection
 		{
 			var attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 
-			return attrs.Length > 0? (T)attrs[0]: null;
+			return attrs.Length > 0 ? (T)attrs[0] : null;
 		}
 
 		public T[]? GetAttributes<T>() where T : Attribute
 		{
 			Array attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 
-			return attrs.Length > 0? (T[])attrs: null;
+			return attrs.Length > 0 ? (T[])attrs : null;
 		}
 
 		public object[]? GetAttributes()
 		{
 			var attrs = MemberInfo.GetCustomAttributes(true);
 
-			return attrs.Length > 0? attrs: null;
+			return attrs.Length > 0 ? attrs : null;
 		}
 
 		public T[] GetTypeAttributes<T>() where T : Attribute
