@@ -60,8 +60,8 @@
 						}
 
 						return new SqlExpression(func.SystemType, CASTEXPR, Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
+						}
 				}
-			}
 
 			return expr;
 		}

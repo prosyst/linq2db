@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using System.Threading;
 	using System.Threading.Tasks;
 
-	class SQLiteBulkCopy : BasicBulkCopy
+    class SQLiteBulkCopy : BasicBulkCopy
 	{
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)

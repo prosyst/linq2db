@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using SqlProvider;
 	using LinqToDB.Mapping;
 
-	partial class SapHanaSqlBuilder : BasicSqlBuilder
+	public partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
 		public SapHanaSqlBuilder(
 			MappingSchema    mappingSchema,

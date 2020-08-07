@@ -4,7 +4,7 @@
 	using SqlProvider;
 	using LinqToDB.Mapping;
 
-	partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
+	public partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{
 		public SqlServer2008SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)

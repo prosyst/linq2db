@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Data;
 	using SchemaProvider;
 
-	class InformixSchemaProvider : SchemaProviderBase
+    public class InformixSchemaProvider : SchemaProviderBase
 	{
 		private readonly InformixDataProvider _provider;
 

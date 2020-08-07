@@ -165,6 +165,8 @@ namespace LinqToDB.Expressions
 					ex);
 			}
 
+			ex = ex.WrapExceptionInTryCatch(String.Format("Failed to get value from column {0} ('{1}')", idx, dataReader.GetName(idx)));
+
 			return ex;
 		}
 

@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Informix
 	using System.Globalization;
 	using LinqToDB.Mapping;
 
-	partial class InformixSqlBuilder : BasicSqlBuilder
+	public partial class InformixSqlBuilder : BasicSqlBuilder
 	{
 		private readonly InformixDataProvider? _provider;
 
@@ -54,8 +54,8 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			else
 			{
-				StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
-			}
+			StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
+		}
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

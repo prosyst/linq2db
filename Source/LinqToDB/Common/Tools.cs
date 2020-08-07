@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
+using System.Text;
 namespace LinqToDB.Common
 {
 	using System.Diagnostics.CodeAnalysis;
@@ -77,13 +77,7 @@ namespace LinqToDB.Common
 			try
 			{
 				var uri = new Uri(Uri.EscapeUriString(uriString));
-
-				var path = string.Empty;
-
-				if (uri.Host != string.Empty)
-					path = Path.DirectorySeparatorChar + uriString.Substring(uriString.ToLowerInvariant().IndexOf(uri.Host), uri.Host.Length);
-
-				path +=
+				var path = 
 					  Uri.UnescapeDataString(uri.AbsolutePath)
 					+ Uri.UnescapeDataString(uri.Query)
 					+ Uri.UnescapeDataString(uri.Fragment);
@@ -95,6 +89,20 @@ namespace LinqToDB.Common
 				throw new LinqToDBException("Error while trying to extract path from " + uriString + " " + ex.Message, ex);
 			}
 		}
+
+		public static String SafeNullDump(this object obj)
+		{
+			return SafeNullDump(obj, false);
+		}
+
+		public static String SafeNullDump(this object obj, bool includeTypeName)
+		{
+			return new StringBuilder()
+					.Append(obj == null ? "(null)" : obj.ToString())
+					.Append(includeTypeName ? String.Format(" (type: {0})", (obj ?? new object()).GetType().FullName) : "")
+					.ToString();
+		}
+
 
 		public static string ToDebugDisplay(string str)
 		{

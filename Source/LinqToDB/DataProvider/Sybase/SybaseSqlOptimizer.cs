@@ -4,7 +4,7 @@
 
 	using SqlQuery;
 
-	class SybaseSqlOptimizer : BasicSqlOptimizer
+	public class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
 		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

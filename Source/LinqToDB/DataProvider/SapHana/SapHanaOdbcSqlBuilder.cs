@@ -5,7 +5,7 @@
 	using LinqToDB.SqlQuery;
 	using SqlProvider;
 
-	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
+	public class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
 		public SapHanaOdbcSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)

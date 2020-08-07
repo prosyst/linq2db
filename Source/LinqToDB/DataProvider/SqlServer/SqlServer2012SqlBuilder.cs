@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 	using LinqToDB.Mapping;
 
-	partial class SqlServer2012SqlBuilder : SqlServerSqlBuilder
+	public partial class SqlServer2012SqlBuilder : SqlServerSqlBuilder
 	{
 		public SqlServer2012SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)

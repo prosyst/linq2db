@@ -3269,7 +3269,7 @@ namespace LinqToDB.SqlProvider
 			return sb;
 		}
 
-		public string ApplyQueryHints(string sql, List<string> queryHints)
+		public virtual string ApplyQueryHints(string sql, List<string> queryHints)
 		{
 			var sb = new StringBuilder();
 

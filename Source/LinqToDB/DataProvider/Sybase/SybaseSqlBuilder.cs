@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using LinqToDB.Mapping;
 	using System.Text;
 
-	partial class SybaseSqlBuilder : BasicSqlBuilder
+	public partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
 		private readonly SybaseDataProvider? _provider;
 

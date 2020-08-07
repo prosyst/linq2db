@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SqlProvider;
 	using LinqToDB.Mapping;
 
-	class SqlCeSqlBuilder : BasicSqlBuilder
+	public class SqlCeSqlBuilder : BasicSqlBuilder
 	{
 		private readonly SqlCeDataProvider? _provider;
 		public SqlCeSqlBuilder(

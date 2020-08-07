@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 	using LinqToDB.Mapping;
 
-	abstract class SqlServerSqlBuilder : BasicSqlBuilder
+	public abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
 		protected readonly SqlServerDataProvider? Provider;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Linq;
+using LinqToDB.Common;
 
 namespace LinqToDB.Reflection
 {
@@ -291,8 +292,14 @@ namespace LinqToDB.Reflection
 			var objParam   = Expression.Parameter(typeof(object), "obj");
 			var getterExpr = GetterExpression.GetBody(Expression.Convert(objParam, TypeAccessor.Type));
 			var getter     = Expression.Lambda<Func<object,object?>>(Expression.Convert(getterExpr, typeof(object)), objParam);
-
+			try
+			{
 			Getter = getter.Compile();
+			}
+			catch (Exception e)
+			{
+				ThrowCompileException(getter, e, true);
+			}
 
 			var valueParam = Expression.Parameter(typeof(object), "value");
 
@@ -302,12 +309,26 @@ namespace LinqToDB.Reflection
 					Expression.Convert(objParam, TypeAccessor.Type),
 					Expression.Convert(valueParam, Type));
 				var setter = Expression.Lambda<Action<object, object?>>(setterExpr, objParam, valueParam);
-
+				try
+				{
 				Setter = setter.Compile();
+			}
+				catch (Exception e)
+				{
+					ThrowCompileException(setter, e, false);
+		}
+			}
+
+		static readonly MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
+			void ThrowCompileException(Expression expression, Exception e, bool isGetter)
+			{
+				string message = String.Format("Failed to compile {0} expression for '{1}'. Expression: {2}",
+												(isGetter ? "Getter" : "Setter"), this.Name, expression.ToString()
+											   );
+				throw new InvalidOperationException(message, e);
 			}
 		}
 
-		static readonly MethodInfo _throwOnDynamicStoreMissingMethod = MemberHelper.MethodOf(() => ThrowOnDynamicStoreMissing<int>()).GetGenericMethodDefinition();
 		static T ThrowOnDynamicStoreMissing<T>()
 		{
 			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");

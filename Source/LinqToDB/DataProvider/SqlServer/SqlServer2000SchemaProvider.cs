@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Data;
 	using SchemaProvider;
 
-	class SqlServer2000SchemaProvider : SqlServerSchemaProvider
+	public class SqlServer2000SchemaProvider : SqlServerSchemaProvider
 	{
 		public SqlServer2000SchemaProvider(SqlServerDataProvider provider)
 			: base(provider)

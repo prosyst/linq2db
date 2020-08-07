@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using System.Text;
 	using LinqToDB.Mapping;
 
-	partial class Oracle11SqlBuilder : BasicSqlBuilder
+	public partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
 		protected OracleDataProvider? Provider { get; }
 

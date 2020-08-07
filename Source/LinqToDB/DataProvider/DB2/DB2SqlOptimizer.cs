@@ -4,7 +4,7 @@
 	using SqlProvider;
 	using SqlQuery;
 
-	class DB2SqlOptimizer : BasicSqlOptimizer
+    public class DB2SqlOptimizer : BasicSqlOptimizer
 	{
 		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -108,8 +108,8 @@
 
 					case "NChar"         :
 					case "NVarChar"      : return new SqlFunction(func.SystemType, "Char",      func.Parameters);
+						}
 				}
-			}
 
 			return expr;
 		}

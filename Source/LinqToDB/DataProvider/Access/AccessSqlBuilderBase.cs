@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Access
 	using SqlProvider;
 	using SqlQuery;
 
-	abstract class AccessSqlBuilderBase : BasicSqlBuilder
+	public abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
 		protected AccessSqlBuilderBase(
 			MappingSchema       mappingSchema,
@@ -41,8 +41,8 @@ namespace LinqToDB.DataProvider.Access
 			}
 			else
 			{
-				StringBuilder.AppendLine("SELECT @@IDENTITY");
-			}
+			StringBuilder.AppendLine("SELECT @@IDENTITY");
+		}
 		}
 
 		public override bool IsNestedJoinSupported => false;
@@ -62,38 +62,38 @@ namespace LinqToDB.DataProvider.Access
 			{
 				if (NeedSkip(selectQuery))
 				{
-					AlternativeBuildSql2(base.BuildSql);
-					return;
-				}
+				AlternativeBuildSql2(base.BuildSql);
+				return;
+			}
 
 				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)
-				{
+			{
 					if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
-					{
+				{
 						if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SqlSearchCondition sc)
-						{
-							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
-							{
-								if (p.Function.Name == "EXISTS")
-								{
-									BuildAnyAsCount(selectQuery);
-									return;
-								}
-							}
-						}
-					}
-					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition sc)
 					{
-						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
+							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
 						{
 							if (p.Function.Name == "EXISTS")
 							{
-								BuildAnyAsCount(selectQuery);
+									BuildAnyAsCount(selectQuery);
 								return;
 							}
 						}
 					}
 				}
+					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition sc)
+				{
+						if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
+					{
+						if (p.Function.Name == "EXISTS")
+						{
+								BuildAnyAsCount(selectQuery);
+							return;
+						}
+					}
+				}
+			}
 			}
 
 			base.BuildSql();
@@ -263,7 +263,7 @@ namespace LinqToDB.DataProvider.Access
 
 						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
 						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-							new SqlFunction(func.SystemType, func.Name, parms)));
+						              new SqlFunction(func.SystemType, func.Name, parms)));
 						return;
 					}
 
@@ -356,7 +356,7 @@ namespace LinqToDB.DataProvider.Access
 
 					return sb.Append('[').Append(value).Append(']');
 
-				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToDatabase:
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
 					if (value.Length > 0 && value[0] == '[')

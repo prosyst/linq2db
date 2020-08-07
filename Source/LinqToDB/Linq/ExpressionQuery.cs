@@ -17,7 +17,7 @@ namespace LinqToDB.Linq
 	using Data;
 	using LinqToDB.Common.Internal;
 
-	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
+	public abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
 		#region Init
 

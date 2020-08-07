@@ -3,7 +3,7 @@
 	using LinqToDB.Mapping;
 	using SqlProvider;
 
-	class DB2zOSSqlBuilder : DB2SqlBuilderBase
+    class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{
 		public DB2zOSSqlBuilder(
 			DB2DataProvider? provider,
@@ -29,5 +29,5 @@
 		}
 
 		protected override DB2Version Version => DB2Version.zOS;
+		}
 	}
-}

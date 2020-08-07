@@ -97,12 +97,12 @@ namespace LinqToDB.Configuration
 
 			try
 			{
-				source    = css.ElementInformation.Source;
+				source = css.ElementInformation.Source;
 				isPresent = css.ElementInformation.IsPresent;
 			}
 			catch (Exception)
 			{
-				source    = "";
+				source = "";
 				isPresent = true;
 			}
 

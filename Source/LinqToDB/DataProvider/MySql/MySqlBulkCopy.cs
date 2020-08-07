@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Data;
 	using LinqToDB.Common;
 
-	class MySqlBulkCopy : BasicBulkCopy
+    class MySqlBulkCopy : BasicBulkCopy
 	{
 		private readonly MySqlDataProvider _provider;
 

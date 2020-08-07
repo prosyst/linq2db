@@ -1711,6 +1711,33 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
+		#region Exception Handling
+		internal static Expression WrapExceptionInTryCatch(this Expression expr, string rethrowMessage)
+		{
+#if DEBUG
+			var invalidOpExCtor = typeof(InvalidOperationException).GetConstructor(new Type[] { typeof(string), typeof(Exception) });
+			var innerEx = Expression.Parameter(typeof(Exception));
+
+			var tryExp = Expression.TryCatch(expr,
+											Expression.MakeCatchBlock(
+												typeof(Exception),
+												innerEx,
+												Expression.Block(
+													Expression.Throw(
+														Expression.New(invalidOpExCtor, Expression.Constant(rethrowMessage), innerEx)
+													),
+													Expression.Default(expr.Type)
+												),
+												null)
+											);
+
+			return tryExp;
+#else
+			return expr;
+#endif
+		}
+		#endregion
+
 		private static readonly MethodInfo _sqlProperty = typeof(Sql).GetMethodEx("Property")!.GetGenericMethodDefinition();
 
 		public static Expression GetMemberGetter(MemberInfo mi, Expression obj)

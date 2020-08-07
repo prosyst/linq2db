@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlProvider;
 	using SqlQuery;
 
-	class InformixSqlOptimizer : BasicSqlOptimizer
+	public class InformixSqlOptimizer : BasicSqlOptimizer
 	{
 		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -53,14 +53,14 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete:
+				case QueryType.Delete :
 					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement);
 					statement = deleteStatement;
 					if (deleteStatement.SelectQuery != null)
 						deleteStatement.SelectQuery.From.Tables[0].Alias = "$";
 					break;
 
-				case QueryType.Update:
+				case QueryType.Update :
 					statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
 					break;
 			}

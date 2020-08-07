@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using System.Data;
 	using System.Data.SqlTypes;
 
-	class SqlServerSchemaProvider : SchemaProviderBase
+	public class SqlServerSchemaProvider : SchemaProviderBase
 	{
 		protected bool IsAzure;
 		protected int  CompatibilityLevel;

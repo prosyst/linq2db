@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using System.Threading;
 	using System.Threading.Tasks;
 
-	class OracleBulkCopy : BasicBulkCopy
+	public class OracleBulkCopy : BasicBulkCopy
 	{
 		private readonly OracleDataProvider _provider;
 
