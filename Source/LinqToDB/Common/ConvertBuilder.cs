@@ -530,6 +530,12 @@ namespace LinqToDB.Common
 			if (to == typeof(object))
 				return Tuple.Create(Expression.Lambda(Expression.Convert(p, typeof(object)), p), ne, false);
 
+			// TEMP: Após ajustar geração do ERP.DB, este código pode ser removido
+			if (from.IsEnum && to.IsEnum)
+				return Tuple.Create(Expression.Lambda(Expression.Convert(p, to), p), 
+					                (LambdaExpression?) Expression.Lambda(Expression.Convert(p, to), p), 
+									false);
+
 			var ex =
 				GetConverter     (mappingSchema, p, from, to) ??
 				ConvertUnderlying(mappingSchema, p, from, from.ToNullableUnderlying(), to, to.ToNullableUnderlying()) ??
