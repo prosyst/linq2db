@@ -24,12 +24,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompareString1([DataSources] string context)
+		public void CompareString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var str = CompilerServices.CompareString(db).ToString()!;
-				Assert.That(str.IndexOf("CASE"), Is.EqualTo(-1));
+				var query = (IQueryable<Person>)CompilerServices.CompareString(db);
+				var str   = query.ToString();
+				TestContext.WriteLine(str);
+				Assert.That(str, Does.Not.Contain("CASE"));
 			}
 		}
 
@@ -107,6 +109,7 @@ namespace Tests.Linq
 			}
 		}
 
+		//Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.VisualBasic.VBTests+Activity649]
 		[ActiveIssue(649)]
 		[Test]
 		public void Issue649Test1([DataSources] string context)
@@ -141,6 +144,7 @@ namespace Tests.Linq
 			}
 		}
 
+		// Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.Model.Child]
 		[ActiveIssue(649)]
 		[Test]
 		public void Issue649Test4([DataSources] string context)
@@ -166,5 +170,18 @@ namespace Tests.Linq
 				var str = q1.ToString();
 			}
 		}
+
+		#region issue 2746
+
+		[Test]
+		public void Issue2746([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				VBTests.Issue2746Test(db, "1");
+			}
 		}
+		#endregion
+
+	}
 }

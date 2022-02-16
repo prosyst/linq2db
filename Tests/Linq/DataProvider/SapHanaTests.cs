@@ -244,8 +244,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", new byte[0])), Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Image("p", new byte[0])), Is.EqualTo(new byte[0]));
+				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Image("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
 				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -390,10 +390,10 @@ namespace Tests.DataProvider
 							floatDataType        = 7700 + n,
 							realDataType         = 7600 + n,
 
-							dateDataType       = DateTime.Now,
-							timeDataType       = DateTime.Now - DateTime.Today,
-							seconddateDataType = DateTime.Now,
-							timestampDataType  = DateTime.Now,
+							dateDataType       = TestData.DateTime,
+							timeDataType       = TestData.TimeOfDay,
+							seconddateDataType = TestData.DateTime,
+							timestampDataType  = TestData.DateTime,
 
 							charDataType      = 'A',
 							varcharDataType   = "AA",
@@ -431,10 +431,10 @@ namespace Tests.DataProvider
 							floatDataType        = 7700 + n,
 							realDataType         = 7600 + n,
 
-							dateDataType       = DateTime.Now,
-							timeDataType       = DateTime.Now - DateTime.Today,
-							seconddateDataType = DateTime.Now,
-							timestampDataType  = DateTime.Now,
+							dateDataType       = TestData.DateTime,
+							timeDataType       = TestData.TimeOfDay,
+							seconddateDataType = TestData.DateTime,
+							timestampDataType  = TestData.DateTime,
 
 							charDataType      = 'A',
 							varcharDataType   = "AA",
@@ -492,7 +492,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -522,7 +522,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -552,7 +552,7 @@ namespace Tests.DataProvider
 								MoneyValue    = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue     = true,
-								GuidValue     = Guid.NewGuid(),
+								GuidValue     = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -582,7 +582,7 @@ namespace Tests.DataProvider
 								MoneyValue = 1000m + n,
 								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 								BoolValue = true,
-								GuidValue = Guid.NewGuid(),
+								GuidValue = TestData.SequentialGuid(n),
 								SmallIntValue = (short)n
 							}
 						));
@@ -613,7 +613,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -643,7 +643,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -747,7 +747,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table(Schema = "TESTHANA", Name = "AllTypesGeo")]
+		[Table(Name = "AllTypesGeo")]
 		public partial class AllTypesGeo
 		{
 			[PrimaryKey, Identity        ] public int     ID                 { get; set; } // INTEGER

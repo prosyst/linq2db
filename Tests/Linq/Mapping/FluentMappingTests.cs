@@ -10,6 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.Mapping
 {
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -570,7 +571,7 @@ namespace Tests.Mapping
 					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test" };
 					db.Insert(item1);
 
-					DerivedClass res = db.GetTable<DerivedClass>().FirstOrDefault();
+					DerivedClass res = db.GetTable<DerivedClass>().First();
 					var count = db.GetTable<DerivedClass>().Count();
 
 					Assert.AreEqual(item.MyCol1, res.MyCol1);
@@ -605,7 +606,7 @@ namespace Tests.Mapping
 					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test", MyCol1 = "MyCol2" };
 					db.Insert(item1);
 
-					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").FirstOrDefault();
+					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").First();
 					var count = db.GetTable<DerivedClass>().Count();
 
 					Assert.AreEqual(item.MyCol1, res.MyCol1);
@@ -643,7 +644,7 @@ namespace Tests.Mapping
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
 				var sql1 = query.ToString();
-				Console.WriteLine(sql1);
+				TestContext.WriteLine(sql1);
 
 				if (finalAliases)
 					Assert.That(sql1, Does.Contain("[AGE]"));
@@ -651,7 +652,7 @@ namespace Tests.Mapping
 					Assert.That(sql1, Does.Not.Contain("[AGE]"));
 
 				var sql2 = query.Select(q => new { q.Name, q.Age }).ToString();
-				Console.WriteLine(sql2);
+				TestContext.WriteLine(sql2);
 
 				if (finalAliases)
 					Assert.That(sql2, Does.Contain("[Age]"));
@@ -676,7 +677,7 @@ namespace Tests.Mapping
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
 				var sql1 = query.ToString();
-				Console.WriteLine(sql1);
+				TestContext.WriteLine(sql1);
 
 				if (finalAliases)
 					Assert.That(sql1, Does.Contain("[MONEY]"));
@@ -684,7 +685,7 @@ namespace Tests.Mapping
 					Assert.That(sql1, Does.Not.Contain("[MONEY]"));
 
 				var sql2 = query.Select(q => new { q.Name, q.Money }).ToString();
-				Console.WriteLine(sql2);
+				TestContext.WriteLine(sql2);
 
 				if (finalAliases)
 					Assert.That(sql2, Does.Contain("[Money]"));
@@ -692,6 +693,5 @@ namespace Tests.Mapping
 					Assert.That(sql2, Does.Not.Contain("[Money]"));
 			}
 		}
-
 	}
 }

@@ -4,22 +4,22 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using System.Xml;
 using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Data;
 	using Common;
+	using Data;
 	using Expressions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Diagnostics.CodeAnalysis;
-	using System.Threading.Tasks;
-	using System.Threading;
 
 	public abstract class DataProviderBase : IDataProvider
 	{
@@ -51,6 +51,7 @@ namespace LinqToDB.DataProvider
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
 				IsUpdateFromSupported                = true,
+				AcceptsOuterExpressionInAggregate    = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
@@ -71,11 +72,13 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Public Members
-		public          string           Name                { get; }
-		public abstract string?          ConnectionNamespace { get; }
-		public abstract Type             DataReaderType      { get; }
-		public virtual  MappingSchema    MappingSchema       { get; }
-		public          SqlProviderFlags SqlProviderFlags    { get; }
+
+		public          string           Name                  { get; }
+		public abstract string?          ConnectionNamespace   { get; }
+		public abstract Type             DataReaderType        { get; }
+		public virtual  MappingSchema    MappingSchema         { get; }
+		public          SqlProviderFlags SqlProviderFlags      { get; }
+		public abstract TableOptions     SupportedTableOptions { get; }
 
 		public static Func<IDataProvider,IDbConnection,IDbConnection>? OnConnectionCreated { get; set; }
 
@@ -127,7 +130,7 @@ namespace LinqToDB.DataProvider
 
 		#region Helpers
 
-		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ConcurrentDictionary<ReaderInfo,Expression>();
+		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ();
 
 		protected void SetCharField(string dataTypeName, Expression<Func<IDataReader,int,string>> expr)
 		{
@@ -147,6 +150,11 @@ namespace LinqToDB.DataProvider
 		protected void SetField<TP,T>(string dataTypeName, Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
+		}
+
+		protected void SetField<TP, T>(string dataTypeName, Type fieldType, Expression<Func<TP, int, T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName }] = expr;
 		}
 
 		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
@@ -244,7 +252,7 @@ namespace LinqToDB.DataProvider
 
 			var getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
-				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
+				Expression.Call(readerExpression, getValueMethodInfo, ExpressionInstances.Int32Array(idx)),
 				fieldType);
 		}
 
@@ -407,19 +415,22 @@ namespace LinqToDB.DataProvider
 		#region BulkCopy
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			where T : notnull
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
 		}
 
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			where T : notnull
 		{
 			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			where T: notnull
 		{
 			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
 		}

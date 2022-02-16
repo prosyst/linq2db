@@ -24,10 +24,10 @@ namespace LinqToDB.Data
 
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed)
+					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = CommandInfo.DataConnection.Command,
+						Command         = CommandInfo.DataConnection.GetCurrentCommand(),
 						StartTime       = StartedOn,
 						ExecutionTime   = Stopwatch.Elapsed,
 						RecordsAffected = ReadNumber,

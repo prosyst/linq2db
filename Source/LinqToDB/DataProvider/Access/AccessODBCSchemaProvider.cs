@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
 
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.SchemaProvider;
+
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Common;
+	using Data;
+	using SchemaProvider;
 	// https://docs.microsoft.com/en-us/dotnet/framework/data/adonet/odbc-schema-collections
 	// unused tables:
 	// DataSourceInformation - database settings
@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.Access
 				select new ColumnInfo
 				{
 					TableID     = c.Field<string>("TABLE_CAT") + "." + c.Field<string>("TABLE_SCHEM") + "." + c.Field<string>("TABLE_NAME"),
-					Name        = c.Field<string>("COLUMN_NAME"),
+					Name        = c.Field<string>("COLUMN_NAME")!,
 					IsNullable  = c.Field<short> ("NULLABLE") == 1,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName,
@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.Access
 				select new ProcedureParameterInfo()
 				{
 					ProcedureID   = catalog + "." + schema + "." + name,
-					ParameterName = p.Field<string>("COLUMN_NAME").TrimStart('[').TrimEnd(']'),
+					ParameterName = p.Field<string>("COLUMN_NAME")!.TrimStart('[').TrimEnd(']'),
 					IsIn          = true,
 					IsOut         = false,
 					Length        = dt.CreateParameters != null && dt.CreateParameters.Contains("length")    ? size : null,

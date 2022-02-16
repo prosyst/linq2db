@@ -24,10 +24,10 @@ namespace LinqToDB.Tools.Mapper
 			public BuilderData(Tuple<MemberInfo[],LambdaExpression>[]? memberMappers) => MemberMappers = memberMappers;
 
 			public readonly Tuple<MemberInfo[],LambdaExpression>[]?          MemberMappers;
-			public readonly Dictionary<Tuple<Type,Type>,ParameterExpression> Mappers     = new Dictionary<Tuple<Type,Type>,ParameterExpression>();
-			public readonly HashSet<Tuple<Type,Type>>                        MapperTypes = new HashSet<Tuple<Type,Type>>();
-			public readonly List<ParameterExpression>                        Locals      = new List<ParameterExpression>();
-			public readonly List<Expression>                                 Expressions = new List<Expression>();
+			public readonly Dictionary<Tuple<Type,Type>,ParameterExpression> Mappers     = new ();
+			public readonly HashSet<Tuple<Type,Type>>                        MapperTypes = new ();
+			public readonly List<ParameterExpression>                        Locals      = new ();
+			public readonly List<Expression>                                 Expressions = new ();
 
 			public ParameterExpression? LocalDic;
 
@@ -92,8 +92,8 @@ namespace LinqToDB.Tools.Mapper
 
 			var l = Lambda(
 				_data.Locals.Count > 0 || _data.Expressions.Count > 0 ?
-					Block(_data.Locals, _data.Expressions.Concat(new [] { expr })) :
-					expr,
+					Block(_data.Locals, _data.Expressions.Concat(new [] { expr! })) :
+					expr!,
 				pFrom);
 
 			return l;
@@ -110,7 +110,7 @@ namespace LinqToDB.Tools.Mapper
 			if (_data.IsRestart)
 				return null;
 
-			var l = Lambda(expr, pFrom);
+			var l = Lambda(expr!, pFrom);
 
 			return l;
 		}
@@ -203,7 +203,7 @@ namespace LinqToDB.Tools.Mapper
 					var expr     = Condition(
 						Equal(getValue, Constant(_mapperBuilder.MappingSchema.GetDefaultValue(getValue.Type), getValue.Type)),
 						Constant(_mapperBuilder.MappingSchema.GetDefaultValue(toMember.Type), toMember.Type),
-						exExpr);
+						exExpr!);
 
 					binds.Add(Bind(toMember.MemberInfo, expr));
 				}
@@ -217,14 +217,14 @@ namespace LinqToDB.Tools.Mapper
 			initExpression =
 				Convert(
 					binds.Count > 0
-						? (Expression)MemberInit(newExpression, binds)
+						? MemberInit(newExpression, binds)
 						: newExpression,
 					toType);
 
 			return initExpression;
 		}
 
-		static NewExpression GetNewExpression([NotNull] Type originalType)
+		static NewExpression GetNewExpression(Type originalType)
 		{
 			var type = originalType;
 
@@ -258,8 +258,8 @@ namespace LinqToDB.Tools.Mapper
 		Expression? ConvertCollection(Expression fromExpression, Type toType)
 		{
 			var fromType     = fromExpression.Type;
-			var fromItemType = fromType.GetItemType();
-			var toItemType   = toType.  GetItemType();
+			var fromItemType = fromType.GetItemType()!;
+			var toItemType   = toType.  GetItemType()!;
 
 			if (toType.IsGenericType && !toType.IsGenericTypeDefinition)
 			{
@@ -365,8 +365,8 @@ namespace LinqToDB.Tools.Mapper
 			readonly ParameterExpression       _localObject;
 			readonly TypeAccessor              _fromAccessor;
 			readonly TypeAccessor              _toAccessor;
-			readonly List<Expression>          _expressions = new List<Expression>();
-			readonly List<ParameterExpression> _locals      = new List<ParameterExpression>();
+			readonly List<Expression>          _expressions = new ();
+			readonly List<ParameterExpression> _locals      = new ();
 			readonly bool                      _cacheMapper;
 
 			public Expression GetExpression()
@@ -395,7 +395,7 @@ namespace LinqToDB.Tools.Mapper
 						_expressions.Add(
 							Call(
 								MemberHelper.MethodOf(() => Add(null!, null!, null!)),
-								_builder._data.LocalDic,
+								_builder._data.LocalDic!,
 								_fromExpression,
 								_localObject));
 					}
@@ -413,7 +413,7 @@ namespace LinqToDB.Tools.Mapper
 						Coalesce(
 							Call(
 								MemberHelper.MethodOf<IDictionary<object,object>>(_ => GetValue(null!, null!)),
-								_builder._data.LocalDic,
+								_builder._data.LocalDic!,
 								_fromExpression),
 							expr),
 						_toExpression.Type);
@@ -428,7 +428,7 @@ namespace LinqToDB.Tools.Mapper
 					if (!toMember.HasSetter)
 						continue;
 
-					var setter = toMember.SetterExpression!;
+					var setter = toMember.SetterExpression;
 
 					if (_builder._data.MemberMappers != null)
 					{
@@ -528,9 +528,9 @@ namespace LinqToDB.Tools.Mapper
 				{
 					var lex = Lambda(expr, pFrom, pTo);
 
-					_builder._data.Expressions.Add(Assign(nullPrm, lex));
+					_builder._data.Expressions.Add(Assign(nullPrm!, lex));
 
-					expr = Invoke(nullPrm, getValue, toObj);
+					expr = Invoke(nullPrm!, getValue, toObj);
 				}
 
 				return expr;
@@ -543,12 +543,12 @@ namespace LinqToDB.Tools.Mapper
 
 				if (toType.IsArray && fromType.IsSubClassOf(typeof(IEnumerable<>)))
 				{
-					var fromItemType = fromType.GetItemType();
-					var toItemType   = toType.  GetItemType();
+					var fromItemType = fromType.GetItemType()!;
+					var toItemType   = toType.  GetItemType()!;
 
 					var expr = ToArray(_builder, _fromExpression, fromItemType, toItemType);
 
-					_expressions.Add(Assign(_localObject, expr));
+					_expressions.Add(Assign(_localObject, expr!));
 
 					return true;
 				}
@@ -569,14 +569,14 @@ namespace LinqToDB.Tools.Mapper
 				if (clearMethodInfo != null)
 					_expressions.Add(Call(_localObject, clearMethodInfo));
 
-				var fromItemType = fromListType.GetItemType();
-				var toItemType   = toListType.  GetItemType();
+				var fromItemType = fromListType.GetItemType()!;
+				var toItemType   = toListType.  GetItemType()!;
 
 				var addRangeMethodInfo = toListType.GetMethod("AddRange");
 
 				if (addRangeMethodInfo != null)
 				{
-					var selectExpr = Select(_builder, _fromExpression, fromItemType, toItemType);
+					var selectExpr = Select(_builder, _fromExpression, fromItemType, toItemType)!;
 					_expressions.Add(Call(_localObject, addRangeMethodInfo, selectExpr));
 				}
 				else if (toListType.IsGenericType && !toListType.IsGenericTypeDefinition)
@@ -586,11 +586,11 @@ namespace LinqToDB.Tools.Mapper
 						var selectExpr = Select(
 							_builder,
 							_fromExpression, fromItemType,
-							toItemType);
+							toItemType)!;
 
 						_expressions.Add(
 							Call(
-								MemberHelper.MethodOf(() => AddRange(((ICollection<int>)null!), (IEnumerable<int>)null!))
+								MemberHelper.MethodOf(() => AddRange<int>(null!, null!))
 									.GetGenericMethodDefinition()
 									.MakeGenericMethod(toItemType),
 								_localObject,
@@ -601,7 +601,7 @@ namespace LinqToDB.Tools.Mapper
 						_expressions.Add(
 							Assign(
 								_localObject,
-								_builder.ConvertCollection(_fromExpression, toListType)));
+								_builder.ConvertCollection(_fromExpression, toListType)!));
 					}
 				}
 				else
@@ -638,7 +638,7 @@ namespace LinqToDB.Tools.Mapper
 				dic[key] = value;
 		}
 
-		static HashSet<T> ToHashSet<T>([InstantHandle] IEnumerable<T> source) => new HashSet<T>(source);
+		static HashSet<T> ToHashSet<T>([InstantHandle] IEnumerable<T> source) => new (source);
 
 		static void AddRange<T>(ICollection<T> source, [InstantHandle] IEnumerable<T> items)
 		{
@@ -664,13 +664,13 @@ namespace LinqToDB.Tools.Mapper
 			Type              fromItemType,
 			Type              toItemType)
 		{
-			var toListInfo = MemberHelper.MethodOf(() => Enumerable.ToList<int>(null)).GetGenericMethodDefinition();
+			var toListInfo = MemberHelper.MethodOf(() => Enumerable.ToList<int>(null!)).GetGenericMethodDefinition();
 			var expr       = Select(builder, fromExpression, fromItemType, toItemType);
 
 			if (builder._data.IsRestart)
 				return null;
 
-			return Call(toListInfo.MakeGenericMethod(toItemType), expr);
+			return Call(toListInfo.MakeGenericMethod(toItemType), expr!);
 		}
 
 		static Expression? ToHashSet(
@@ -685,7 +685,7 @@ namespace LinqToDB.Tools.Mapper
 			if (builder._data.IsRestart)
 				return null;
 
-			return Call(toListInfo.MakeGenericMethod(toItemType), expr);
+			return Call(toListInfo.MakeGenericMethod(toItemType), expr!);
 		}
 
 		static Expression? ToArray(
@@ -694,13 +694,13 @@ namespace LinqToDB.Tools.Mapper
 			Type              fromItemType,
 			Type              toItemType)
 		{
-			var toListInfo = MemberHelper.MethodOf(() => Enumerable.ToArray<int>(null)).GetGenericMethodDefinition();
+			var toListInfo = MemberHelper.MethodOf(() => Enumerable.ToArray<int>(null!)).GetGenericMethodDefinition();
 			var expr       = Select(builder, fromExpression, fromItemType, toItemType);
 
 			if (builder._data.IsRestart)
 				return null;
 
-			return Call(toListInfo.MakeGenericMethod(toItemType), expr);
+			return Call(toListInfo.MakeGenericMethod(toItemType), expr!);
 		}
 
 		static Expression? Select(
@@ -710,11 +710,11 @@ namespace LinqToDB.Tools.Mapper
 			Type              toItemType)
 		{
 			var getBuilderInfo = MemberHelper.MethodOf(() => GetBuilder<int,int>(null!)).               GetGenericMethodDefinition();
-			var selectInfo     = MemberHelper.MethodOf(() => Enumerable.Select<int,int>(null, _ => _)).GetGenericMethodDefinition();
+			var selectInfo     = MemberHelper.MethodOf(() => Enumerable.Select<int,int>(null!, _ => _)).GetGenericMethodDefinition();
 			var itemBuilder    =
 				(IMapperBuilder)getBuilderInfo
 					.MakeGenericMethod(fromItemType, toItemType)
-					.Invoke(null, new object[] { builder._mapperBuilder });
+					.Invoke(null, new object[] { builder._mapperBuilder })!;
 
 			var expr = getValue;
 
@@ -741,7 +741,7 @@ namespace LinqToDB.Tools.Mapper
 				if (builder._data.IsRestart)
 					return null;
 
-				expr = Call(selectInfo.MakeGenericMethod(fromItemType, toItemType), getValue, selector);
+				expr = Call(selectInfo.MakeGenericMethod(fromItemType, toItemType), getValue, selector!);
 			}
 
 			return expr;

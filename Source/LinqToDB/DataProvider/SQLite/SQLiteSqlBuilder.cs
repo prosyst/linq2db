@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
@@ -8,8 +7,6 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
-	using Common;
-	using Tools;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
@@ -21,10 +18,12 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
+		protected override bool SupportsColumnAliasesInSource => false;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity && trun.Table!.Fields.Values.Any(f => f.IsIdentity) ? 2 : 1;
+				return trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1;
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
@@ -59,7 +58,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinSupported { get { return false; } }
+		public override bool IsNestedJoinSupported => false;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -114,7 +113,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
-			if (createTable.Table!.Fields.Values.Any(f => f.IsIdentity))
+			if (createTable.Table!.IdentityFields.Count > 0)
 			{
 				while (StringBuilder[StringBuilder.Length - 1] != ',')
 					StringBuilder.Length--;
@@ -124,69 +123,19 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				AppendIndent();
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
-				StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
-				StringBuilder.Append(")");
+			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+				StringBuilder.Append(')');
 			}
 		}
 
-		protected override void BuildPredicate(ISqlPredicate predicate)
-		{
-			if (predicate is SqlPredicate.ExprExpr exprExpr)
-			{
-				var leftType  = QueryHelper.GetDbDataType(exprExpr.Expr1);
-				var rightType = QueryHelper.GetDbDataType(exprExpr.Expr2);
-
-				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
-					!(exprExpr.Expr1 is IValueContainer container1 && container1.Value == null ||
-					  exprExpr.Expr2 is IValueContainer container2 && container2.Value == null))
-				{
-					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
-					{
-						var l = new SqlFunction(leftType.SystemType, "$Convert$", SqlDataType.GetDataType(leftType.SystemType),
-							new SqlDataType(leftType), exprExpr.Expr1);
-						exprExpr.Expr1 = l;
-					}
-					
-					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == "$Convert$" || func2.Name == "DateTime")))
-					{
-						var r = new SqlFunction(rightType.SystemType, "$Convert$", new SqlDataType(rightType),
-							new SqlDataType(rightType), exprExpr.Expr2);
-						exprExpr.Expr2 = r;
-					}
-				}
-			}
-
-			base.BuildPredicate(predicate);
-		}
-
-		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table)
+		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
 		{
 			if (database != null && database.Length == 0) database = null;
 
 			if (database != null)
-				sb.Append(database).Append(".");
+				sb.Append(database).Append('.');
 
 			return sb.Append(table);
-		}
-
-		static bool IsDateTime(DbDataType dbDataType)
-		{
-			if (dbDataType.DataType.In(DataType.Date, DataType.Time, DataType.DateTime, DataType.DateTime2,
-				DataType.DateTimeOffset, DataType.SmallDateTime, DataType.Timestamp))
-				return true;
-
-			if (dbDataType.DataType != DataType.Undefined)
-				return false;
-
-			return IsDateTime(dbDataType.SystemType);
-		}
-
-		static bool IsDateTime(Type type)
-		{
-			return    type == typeof(DateTime)
-				   || type == typeof(DateTimeOffset)
-				   || type == typeof(DateTime?)
-				   || type == typeof(DateTimeOffset?);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
@@ -197,6 +146,85 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		}
+
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
+
+			StringBuilder.Append(command);
+
+			if (table.TableOptions.HasCreateIfNotExists())
+				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(expr.IsNot ? " IS " : " IS NOT ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
+		{
+			valuesTable = ConvertElement(valuesTable);
+			var rows = valuesTable.BuildRows(OptimizationContext.Context);
+
+			if (rows.Count == 0)
+			{
+				StringBuilder.Append(OpenParens);
+				BuildEmptyValues(valuesTable);
+				StringBuilder.Append(')');
+			}
+			else
+			{
+				StringBuilder.Append(OpenParens);
+
+				++Indent;
+
+				StringBuilder.AppendLine();
+				AppendIndent();
+				BuildEmptyValues(valuesTable);
+				StringBuilder.AppendLine();
+
+				AppendIndent();
+
+				if (rows.Count > 0)
+				{
+					StringBuilder.AppendLine("UNION ALL");
+					AppendIndent();
+
+					BuildValues(valuesTable, rows);
+				}
+
+				StringBuilder.Append(')');
+
+				--Indent;
+			}
+
+			aliasBuilt = false;
 		}
 	}
 }

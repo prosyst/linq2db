@@ -5,7 +5,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.DataProvider
 {
 	[TestFixture]
 	public class SQLiteParameterTests : TestBase
@@ -51,10 +51,10 @@ namespace Tests.Linq
 				db.InlineParameters = true;
 
 				var query = from t in db.GetTable<ClassWithIntDate>()
-					where t.Value > DateTime.Now
-					select t;
+							where t.Value > TestData.DateTime
+							select t;
 
-				Assert.That(query.GetStatement().Parameters.Count, Is.EqualTo(0));
+				Assert.That(query.GetStatement().CollectParameters().Length, Is.EqualTo(0));
 
 				Assert.That(query.ToString(), Does.Not.Contain("DateTime("));
 			}

@@ -6,7 +6,12 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlCreateTableStatement : SqlStatement
 	{
-		public SqlTable?       Table           { get; set; }
+		public SqlCreateTableStatement(SqlTable sqlTable)
+		{
+			Table = sqlTable;
+		}
+
+		public SqlTable        Table           { get; private set; }
 		public string?         StatementHeader { get; set; }
 		public string?         StatementFooter { get; set; }
 		public DefaultNullable DefaultNullable { get; set; }
@@ -33,26 +38,11 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Table = ((ISqlExpressionWalkable?)Table)?.Walk(options, func) as SqlTable;;
+			Table = (SqlTable)((ISqlExpressionWalkable)Table).Walk(options, context, func)!;
 
 			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlCreateTableStatement();
-
-			if (Table != null)
-				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
@@ -60,11 +50,11 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
 			if (SelectQuery != null)
 			{
-				var newQuery = func(SelectQuery);
+				var newQuery = func(context, SelectQuery);
 				if (!ReferenceEquals(newQuery, SelectQuery))
 					SelectQuery = newQuery;
 			}

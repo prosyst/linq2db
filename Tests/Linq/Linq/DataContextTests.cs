@@ -47,13 +47,13 @@ namespace Tests.Linq
 		{
 			using (var ctx = new DataContext(context))
 			{
-				Console.WriteLine(ctx.GetTable<Person>().ToString());
+				NUnit.Framework.TestContext.WriteLine(ctx.GetTable<Person>().ToString());
 
 				var q =
 					from s in ctx.GetTable<Person>()
 					select s.FirstName;
 
-				Console.WriteLine(q.ToString());
+				NUnit.Framework.TestContext.WriteLine(q.ToString());
 			}
 		}
 
@@ -88,7 +88,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue("Unstable issue with Sybase vs Sybase.Managed DataProvider.Name", Configuration = TestProvName.AllSybase)]
+		[ActiveIssue("Provider detector picks managed provider as we don't have separate provider name for native Sybase provider", Configuration = ProviderName.Sybase)]
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
 			using (var db  = (TestDataConnection)GetDataContext(context))

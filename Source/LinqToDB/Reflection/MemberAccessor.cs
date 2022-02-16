@@ -11,13 +11,12 @@ namespace LinqToDB.Reflection
 	using Common;
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 
 	public class MemberAccessor
 	{
-		static readonly ConstructorInfo ArgumentExceptionConstructorInfo =
-			typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
-				throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
+		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)})!;
 
 		internal MemberAccessor(TypeAccessor typeAccessor, string memberName, EntityDescriptor? ed)
 		{
@@ -51,11 +50,10 @@ namespace LinqToDB.Reflection
 				MemberInfo = lastInfo.member;
 				Type = lastInfo.type;
 
-				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClass || info.type.IsNullable());
+				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsNullableType());
 
 				// Build getter.
 				//
-				{
 					if (checkNull)
 					{
 						var ret = Expression.Variable(Type, "ret");
@@ -68,15 +66,15 @@ namespace LinqToDB.Reflection
 							if (i == infos.Length - 1)
 								return Expression.Assign(ret, next);
 
-							if (next.Type.IsClass || next.Type.IsNullable())
+						if (next.Type.IsNullableType())
 							{
 								var local = Expression.Variable(next.Type);
 
 								return Expression.Block(
 									new[] { local },
-									Expression.Assign(local, next) as Expression,
+								Expression.Assign(local, next),
 									Expression.IfThen(
-										Expression.NotEqual(local, Expression.Constant(null)),
+									Expression.NotEqual(local, ExpressionInstances.UntypedNull),
 										MakeGetter(local, i + 1)));
 							}
 
@@ -97,11 +95,9 @@ namespace LinqToDB.Reflection
 					}
 
 					GetterExpression = Expression.Lambda(expr, objParam);
-				}
 
 				// Build setter.
 				//
-				{
 					HasSetter = !infos.Any(info => info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethod(true) == null);
 
 					var valueParam = Expression.Parameter(Type, "value");
@@ -124,7 +120,7 @@ namespace LinqToDB.Reflection
 								}
 								else
 								{
-									if (next.Type.IsClass || next.Type.IsNullable())
+								if (next.Type.IsNullableType())
 									{
 										var local = Expression.Variable(next.Type);
 
@@ -133,7 +129,7 @@ namespace LinqToDB.Reflection
 										exprs.Add(Expression.Assign(local, next));
 										exprs.Add(
 											Expression.IfThen(
-												Expression.Equal(local, Expression.Constant(null)),
+											Expression.Equal(local, ExpressionInstances.UntypedNull),
 												Expression.Block(
 													Expression.Assign(local, Expression.New(local.Type)),
 													Expression.Assign(next, local))));
@@ -168,12 +164,11 @@ namespace LinqToDB.Reflection
 						SetterExpression = Expression.Lambda(
 							Expression.Block(
 								new[] { fakeParam },
-								Expression.Assign(fakeParam, Expression.Constant(0))),
+							Expression.Assign(fakeParam, ExpressionInstances.Constant0)),
 							objParam,
 							valueParam);
 					}
 				}
-			}
 
 			SetExpressions();
 		}
@@ -186,6 +181,9 @@ namespace LinqToDB.Reflection
 			SetExpressions();
 		}
 
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[MemberNotNull(nameof(Type), nameof(MemberInfo), nameof(GetterExpression), nameof(SetterExpression))]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		void SetSimple(MemberInfo memberInfo, EntityDescriptor? ed)
 		{
 			MemberInfo = memberInfo;
@@ -281,7 +279,7 @@ namespace LinqToDB.Reflection
 					setterType,
 					Expression.Block(
 						new[] { fakeParam },
-						new Expression[] { Expression.Assign(fakeParam, Expression.Constant(0)) }),
+						new Expression[] { Expression.Assign(fakeParam, ExpressionInstances.Constant0) }),
 					objParam,
 					valueParam);
 			}
@@ -294,7 +292,7 @@ namespace LinqToDB.Reflection
 			var getter     = Expression.Lambda<Func<object,object?>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 			try
 			{
-				Getter = getter.Compile();
+			Getter = getter.CompileExpression();
 			}
 			catch (Exception e)
 			{
@@ -311,7 +309,7 @@ namespace LinqToDB.Reflection
 				var setter = Expression.Lambda<Action<object, object?>>(setterExpr, objParam, valueParam);
 				try
 				{
-					Setter = setter.Compile();
+				Setter = setter.CompileExpression();
 				}
 				catch (Exception e)
 				{
@@ -332,19 +330,18 @@ namespace LinqToDB.Reflection
 		static T ThrowOnDynamicStoreMissing<T>()
 		{
 			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");
-
 		}
 
 		#region Public Properties
 
-		public MemberInfo MemberInfo { get; private set; } = null!;
+		public MemberInfo              MemberInfo       { get; private set; }
 		public TypeAccessor TypeAccessor { get; private set; }
 		public bool HasGetter { get; private set; }
 		public bool HasSetter { get; private set; }
-		public Type Type { get; private set; } = null!;
+		public Type                    Type             { get; private set; }
 		public bool IsComplex { get; private set; }
-		public LambdaExpression GetterExpression { get; private set; } = null!;
-		public LambdaExpression? SetterExpression { get; private set; }
+		public LambdaExpression        GetterExpression { get; private set; }
+		public LambdaExpression        SetterExpression { get; private set; }
 		public Func<object, object?>? Getter { get; private set; }
 		public Action<object, object?>? Setter { get; private set; }
 
@@ -357,8 +354,7 @@ namespace LinqToDB.Reflection
 
 		#region Public Methods
 
-		[return: MaybeNull]
-		public T GetAttribute<T>() where T : Attribute
+		public T? GetAttribute<T>() where T : Attribute
 		{
 			var attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 

@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-
+using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -38,22 +35,19 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now;
-				var dto = DateTimeOffset.Now;
-
 				var testData = new[]
 				{
 					new AllTypes2()
 					{
 						ID = 1,
-						datetimeoffsetDataType = dto,
-						datetime2DataType = dt
+						datetimeoffsetDataType = TestData.DateTimeOffset,
+						datetime2DataType = TestData.DateTime
 					},
 					new AllTypes2()
 					{
 						ID = 2,
-						datetimeoffsetDataType = dto.AddTicks(1),
-						datetime2DataType = dt.AddTicks(1)
+						datetimeoffsetDataType = TestData.DateTimeOffset.AddTicks(1),
+						datetime2DataType = TestData.DateTime.AddTicks(1)
 					}
 				};
 
@@ -85,20 +79,17 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now;
-				var dto = DateTimeOffset.Now;
-
 				var testData = new[]
 				{
 					new AllTypes2()
 					{
-						datetimeoffsetDataType = dto,
-						datetime2DataType = dt
+						datetimeoffsetDataType = TestData.DateTimeOffset,
+						datetime2DataType = TestData.DateTime
 					},
 					new AllTypes2()
 					{
-						datetimeoffsetDataType = dto.AddTicks(1),
-						datetime2DataType = dt.AddTicks(1)
+						datetimeoffsetDataType = TestData.DateTimeOffset.AddTicks(1),
+						datetime2DataType = TestData.DateTime.AddTicks(1)
 					}
 				};
 
@@ -130,8 +121,8 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now.AddTicks(-2);
-				var dto = DateTimeOffset.Now.AddTicks(-2);
+				var dt = TestData.DateTime.AddTicks(-2);
+				var dto = TestData.DateTimeOffset.AddTicks(-2);
 
 				var testData = new[]
 				{
@@ -152,7 +143,7 @@ namespace Tests.xUpdate
 				var cnt = db.GetTable<AllTypes2>()
 					.Merge()
 					.Using(testData)
-					.On((t, s) => s.datetime2DataType != DateTime.Now && s.datetimeoffsetDataType != DateTimeOffset.Now)
+					.On((t, s) => s.datetime2DataType != TestData.DateTime && s.datetimeoffsetDataType != TestData.DateTimeOffset)
 					.InsertWhenNotMatched()
 					.Merge();
 
@@ -177,8 +168,7 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now;
-				var dto = DateTimeOffset.Now;
+				var dto = TestData.DateTimeOffset;
 
 				var testData = new[]
 				{
@@ -186,17 +176,17 @@ namespace Tests.xUpdate
 					{
 						ID = 1,
 						datetimeoffsetDataType = dto,
-						datetime2DataType = dt
+						datetime2DataType = TestData.DateTime
 					},
 					new AllTypes2()
 					{
 						ID = 2,
 						datetimeoffsetDataType = dto.AddTicks(1),
-						datetime2DataType = dt.AddTicks(1)
+						datetime2DataType = TestData.DateTime.AddTicks(1)
 					}
 				};
 
-				var dt2 = dt.AddTicks(3);
+				var dt2 = TestData.DateTime.AddTicks(3);
 				var dto2 = dto.AddTicks(3);
 
 				var cnt = db.GetTable<AllTypes2>()
@@ -234,20 +224,19 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<AllTypes2>().Delete();
 
-				var dt = DateTime.Now;
-				var dto = DateTimeOffset.Now;
+				var dto = TestData.DateTimeOffset;
 
 				var testData = new[]
 				{
 					new AllTypes2()
 					{
 						datetimeoffsetDataType = dto,
-						datetime2DataType = dt
+						datetime2DataType = TestData.DateTime
 					},
 					new AllTypes2()
 					{
 						datetimeoffsetDataType = dto.AddTicks(1),
-						datetime2DataType = dt.AddTicks(1)
+						datetime2DataType = TestData.DateTime.AddTicks(1)
 					}
 				};
 
@@ -258,7 +247,7 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var dt2 = dt.AddTicks(3);
+				var dt2 = TestData.DateTime.AddTicks(3);
 				var dto2 = dto.AddTicks(3);
 				var cnt = db.GetTable<AllTypes2>()
 					.Merge()
@@ -788,6 +777,49 @@ namespace Tests.xUpdate
 			}
 		}
 
+		#endregion
+
+		#region TestNullableParameterInSourceQuery
+		[Table]
+		public class TestNullableParameterTarget
+		{
+			[PrimaryKey] public int Id1 { get; set; }
+			[PrimaryKey] public int Id2 { get; set; }
+		}
+
+		[Table]
+		public class TestNullableParameterSource
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Test]
+		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var target = db.CreateLocalTable<TestNullableParameterTarget>())
+			using (var source = db.CreateLocalTable<TestNullableParameterSource>())
+			{
+				run(null);
+				run(1);
+
+				void run(int? id)
+				{
+					target
+						.Merge()
+						.Using(source
+							.Where(_ => _.Id == id)
+							.Select(_ => new TestNullableParameterTarget()
+							{
+								Id1 = 2,
+								Id2 = _.Id
+							}))
+						.OnTargetKey()
+						.InsertWhenNotMatched()
+						.Merge();
+				}
+			}
+		}
 		#endregion
 	}
 }

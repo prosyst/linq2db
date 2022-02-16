@@ -53,8 +53,8 @@ namespace LinqToDB.DataProvider.SapHana
 			var dt = dts.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
-					TypeName         = t.Field<string>("TypeName"),
-					DataType         = t.Field<string>("DataType"),
+					TypeName         = t.Field<string>("TypeName")!,
+					DataType         = t.Field<string>("DataType")!,
 					CreateFormat     = t.Field<string>("CreateFormat"),
 					CreateParameters = t.Field<string>("CreateParameters"),
 					ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),
@@ -81,6 +81,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			var combinedQuery = dataConnection.Query(x =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
 				var schemaName = x.GetString(0);
 				var tableName  = x.GetString(1);
 				var comments   = x.IsDBNull(2) ? null : x.GetString(2);
@@ -169,8 +170,8 @@ namespace LinqToDB.DataProvider.SapHana
 				select new PrimaryKeyInfo
 				{
 					TableID        = pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("INDEX_NAME"),
-					ColumnName     = pk.Field<string>("COLUMN_NAME"),
+					PrimaryKeyName = pk.Field<string>("INDEX_NAME")!,
+					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
 					Ordinal        = Converter.ChangeTypeTo<int>(pk["POSITION"]),
 				}
 			).ToList();
@@ -227,6 +228,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			var query = dataConnection.Query(x =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
 				var schemaName   = x.GetString(0);
 				var tableName    = x.GetString(1);
 				var columnName   = x.GetString(2);
@@ -282,6 +284,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			return dataConnection.Query(rd =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
 				var schema          = rd.GetString(0);
 				var procedure       = rd.GetString(1);
 				var isFunction      = rd.GetBoolean(2);
@@ -328,6 +331,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			return dataConnection.Query(rd =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
 				var schema    = rd.GetString(0);
 				var procedure = rd.GetString(1);
 				var parameter = rd.GetString(2);
@@ -392,7 +396,7 @@ namespace LinqToDB.DataProvider.SapHana
 				from r in resultTable.AsEnumerable()
 
 				let systemType   = r.Field<Type>("DataType")
-				let columnName   = GetEmptyStringIfInvalidColumnName(r.Field<string>("ColumnName"))
+				let columnName   = GetEmptyStringIfInvalidColumnName(r.Field<string>("ColumnName")!)
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
 				let dataType     = GetDataTypeByProviderDbType(providerType, options)
 				let columnType   = dataType?.TypeName
@@ -508,7 +512,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				commandText += ")";
 				commandType = CommandType.Text;
-				parameters  = new DataParameter[0];
+				parameters  = Array<DataParameter>.Empty;
 			}
 			else
 			{
@@ -594,6 +598,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			var query = dataConnection.Query(x =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
 				var schemaName = x.GetString(0);
 				var tableName = x.GetString(1);
 				return new TableInfo
@@ -630,6 +635,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			var query = dataConnection.Query(rd =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
 				var schema           = rd.GetString(0);
 				var view             = rd.GetString(1);
 				var parameterName    = rd.GetString(2);

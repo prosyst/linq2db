@@ -61,14 +61,14 @@ namespace LinqToDB.Tools
 						if      (value == null)            values[i] = "<NULL>";
 						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G");
 						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss");
-						else                               values[i] = value.ToString();
+						else                               values[i] = value.ToString() ?? string.Empty;
 					}
 
 					itemValues.Add(values);
 				}
 				else
 				{
-					itemValues.Add(item == null ? new[] { "<NULL>" } : new[] { item.ToString() });
+					itemValues.Add(item == null ? new[] { "<NULL>" } : new[] { item.ToString() ?? string.Empty });
 				}
 			}
 
@@ -85,8 +85,8 @@ namespace LinqToDB.Tools
 			void PrintDivider()
 			{
 				foreach (var len in lens)
-					stringBuilder.Append("+-").Append('-', len).Append("-");
-				stringBuilder.Append("+").AppendLine();
+					stringBuilder.Append("+-").Append('-', len).Append('-');
+				stringBuilder.Append('+').AppendLine();
 			}
 
 			if (addTableHeader)
@@ -96,10 +96,10 @@ namespace LinqToDB.Tools
 				for (var i = 0; i < lens.Length; i++)
 				{
 					var member = ta.Members[i];
-					stringBuilder.Append("| ").Append(member.Name).Append(' ', lens[i] - member.Name.Length).Append(" ");
+					stringBuilder.Append("| ").Append(member.Name).Append(' ', lens[i] - member.Name.Length).Append(' ');
 				}
 
-				stringBuilder.Append("|").AppendLine();
+				stringBuilder.Append('|').AppendLine();
 			}
 
 			PrintDivider();
@@ -136,10 +136,10 @@ namespace LinqToDB.Tools
 					else
 						stringBuilder.Append(values[i]).Append(' ', lens[i] - values[i].Length);
 
-					stringBuilder.Append(" ");
+					stringBuilder.Append(' ');
 				}
 
-				stringBuilder.Append("|").AppendLine();
+				stringBuilder.Append('|').AppendLine();
 			}
 
 			PrintDivider();

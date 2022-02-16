@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Collections;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using Common;
 	using Data;
 	using Mapping;
@@ -27,8 +26,7 @@ namespace LinqToDB.DataProvider.MySql
 					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
 				  MySqlProviderAdapter.GetInstance(name))
 		{
-
-			SqlProviderFlags.IsDistinctOrderBySupported        = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
@@ -57,6 +55,13 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			return new MySqlSchemaProvider(this);
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary               |
+			TableOptions.IsLocalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData      |
+			TableOptions.CreateIfNotExists         |
+			TableOptions.DropIfExists;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
@@ -121,7 +126,7 @@ namespace LinqToDB.DataProvider.MySql
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (source == null)
-				throw new ArgumentException(nameof(source));
+				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -134,7 +139,7 @@ namespace LinqToDB.DataProvider.MySql
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
-				throw new ArgumentException(nameof(source));
+				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -144,12 +149,12 @@ namespace LinqToDB.DataProvider.MySql
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
-				throw new ArgumentException(nameof(source));
+				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
-
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Reflection;
@@ -89,19 +89,19 @@ namespace LinqToDB.Tools.Comparers
 			readonly Func<T,T,bool> _equals;
 			readonly Func<T,int>    _getHashCode;
 
-			public override bool Equals     (T x, T y) => x != null ? y != null && _equals(x, y) : y == null;
+			public override bool Equals     (T? x, T? y) => x != null ? y != null && _equals(x, y) : y == null;
 
-			public override int  GetHashCode(T obj)    => obj == null ? 0 : _getHashCode(obj);
+			public override int  GetHashCode(T obj)      => obj == null ? 0 : _getHashCode(obj);
 
 			internal static Comparer<T>? DefaultInstance;
 		}
 
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on object public members equality.
 		/// </summary>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>()
@@ -113,15 +113,15 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer GetEqualityComparer(Type type)
 		{
 			var method = _getEqualityComparerMethodInfo.MakeGenericMethod(type);
-			return (IEqualityComparer)method.Invoke(null, null);
+			return (IEqualityComparer)method.Invoke(null, null)!;
 		}
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on provided object public members equality.
 		/// </summary>
 		/// <param name="membersToCompare">Members to compare.</param>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(params Expression<Func<T,object?>>[] membersToCompare)
@@ -131,21 +131,21 @@ namespace LinqToDB.Tools.Comparers
 		}
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on object public members equality.
 		/// </summary>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(IEnumerable<T> ignored) =>
 			GetEqualityComparer<T>();
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on provided object public members equality.
 		/// </summary>
 		/// <param name="membersToCompare">A function that returns members to compare.</param>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
@@ -158,11 +158,11 @@ namespace LinqToDB.Tools.Comparers
 		}
 
 		/// <summary>
-		/// Returns implementations of the <see cref="T:System.Collections.Generic.IEqualityComparer`1" /> generic interface
+		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on provided object public members equality.
 		/// </summary>
 		/// <param name="memberPredicate">A function to filter members to compare.</param>
-		/// <returns>Instance of <see cref="T:System.Collections.Generic.IEqualityComparer`1" />.</returns>
+		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
@@ -193,10 +193,10 @@ namespace LinqToDB.Tools.Comparers
 			});
 
 			var expression = expressions
-				.DefaultIfEmpty(Expression.Constant(true))
+				.DefaultIfEmpty(ExpressionInstances.True)
 				.Aggregate(Expression.AndAlso);
 
-			return Expression.Lambda<Func<T,T,bool>>(expression, x, y).Compile();
+			return Expression.Lambda<Func<T,T,bool>>(expression, x, y).CompileExpression();
 		}
 
 		static Expression GetEqualityComparerExpression(Type type)
@@ -208,7 +208,7 @@ namespace LinqToDB.Tools.Comparers
 			else if (type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type))
 				comparerType = typeof(IEnumerable<>).IsSameOrParentOf(type)
 					? typeof(EnumerableEqualityComparer<>).MakeGenericType(type.IsArray
-						? type.GetElementType()
+						? type.GetElementType()!
 						: type.GetGenericArguments()[0])
 					: typeof(EnumerableEqualityComparer);
 			else if (type.IsClass &&  (type.Name.StartsWith("<>") || !type.GetMethods().Any(m => m.Name == "Equals" && m.DeclaringType == type)))
@@ -228,7 +228,7 @@ namespace LinqToDB.Tools.Comparers
 				}
 			}
 
-			return Expression.MakeMemberAccess(null, comparerType.GetProperty("Default"));
+			return Expression.MakeMemberAccess(null, comparerType.GetProperty("Default")!);
 		}
 
 		[Pure]
@@ -248,7 +248,7 @@ namespace LinqToDB.Tools.Comparers
 						Expression.Call(eq, mi, ma));
 				});
 
-			return Expression.Lambda<Func<T, int>>(expression, parameter).Compile();
+			return Expression.Lambda<Func<T, int>>(expression, parameter).CompileExpression();
 		}
 
 		[Pure]

@@ -40,10 +40,10 @@ namespace LinqToDB.DataProvider
 			// System.MethodAccessException : Attempt by security transparent method 'LinqToDB.DataProvider.AssemblyResolver.SetResolver()' to access security critical method 'System.AppDomain.add_AssemblyResolve(System.ResolveEventHandler)'
 			var l = Expression.Lambda<Action>(Expression.Call(
 				Expression.Constant(AppDomain.CurrentDomain),
-				typeof(AppDomain).GetEvent("AssemblyResolve")!.GetAddMethod(),
+				typeof(AppDomain).GetEvent("AssemblyResolve")!.GetAddMethod()!,
 				Expression.Constant(resolver)));
 
-			l.Compile()();
+			l.CompileExpression()();
 		}
 
 		public Assembly? Resolver(object? sender, ResolveEventArgs args)

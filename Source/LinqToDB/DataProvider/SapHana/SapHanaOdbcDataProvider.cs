@@ -36,9 +36,10 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
 
 			//not supported flags
-			SqlProviderFlags.IsSubQueryTakeSupported     = false;
-			SqlProviderFlags.IsApplyJoinSupported        = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported   = false;
+			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsApplyJoinSupported              = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
@@ -52,12 +53,18 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (commandType == CommandType.StoredProcedure)
 			{
-				commandText = $"{{ CALL {commandText} ({string.Join(",", parameters.Select(x => "?"))}) }}";
+				commandText = $"{{ CALL {commandText} ({string.Join(",", (parameters ?? Array<DataParameter>.Empty).Select(x => "?"))}) }}";
 				commandType = CommandType.Text;
 			}
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
 		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                |
+			TableOptions.IsGlobalTemporaryStructure |
+			TableOptions.IsLocalTemporaryStructure  |
+			TableOptions.IsLocalTemporaryData;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
@@ -91,13 +98,12 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case DataType.Boolean:
 					dataType = dataType.WithDataType(DataType.Byte);
-					if (value is bool)
-						value = (bool)value ? (byte)1 : (byte)0;
+					if (value is bool b)
+						value = b ? (byte)1 : (byte)0;
 					break;
 				case DataType.Guid:
-					if (value != null)
-						value = value.ToString();
-					dataType = dataType.WithDataType(DataType.Char);
+					value          = value?.ToString();
+					dataType       = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
 			}

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Data.Common;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -64,7 +64,11 @@ namespace LinqToDB.Common
 		/// <returns>Assembly file path.</returns>
 		public static string GetFileName(this Assembly assembly)
 		{
+#if NETFRAMEWORK
 			return assembly.CodeBase!.GetPathFromUri();
+#else
+			return assembly.Location;
+#endif
 		}
 
 		/// <summary>
@@ -76,8 +80,18 @@ namespace LinqToDB.Common
 		{
 			try
 			{
+				// TODO: v4: get rid of this API completely?
+				// originated from https://github.com/linq2db/linq2db/pull/502
+#pragma warning disable SYSLIB0013 // Type or member is obsolete : ugly solutions for ugly problems
 				var uri = new Uri(Uri.EscapeUriString(uriString));
-				var path = 
+#pragma warning restore SYSLIB0013 // Type or member is obsolete
+
+				var path = string.Empty;
+
+				if (uri.Host != string.Empty)
+					path = Path.DirectorySeparatorChar + uriString.Substring(uriString.ToLowerInvariant().IndexOf(uri.Host), uri.Host.Length);
+
+				path +=
 					  Uri.UnescapeDataString(uri.AbsolutePath)
 					+ Uri.UnescapeDataString(uri.Query)
 					+ Uri.UnescapeDataString(uri.Fragment);
@@ -162,6 +176,7 @@ namespace LinqToDB.Common
 #if !NETSTANDARD2_0
 			try
 			{
+				if (providerFactory != null)
 				return DbProviderFactories.GetFactory(providerFactory).GetType().Assembly;
 			}
 			catch {}

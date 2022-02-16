@@ -2,7 +2,7 @@
 {
 	using SqlQuery;
 	using SqlProvider;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	public class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
@@ -21,6 +21,8 @@
 			return new SqlServer2005SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
+		protected override bool IsValuesSyntaxSupported => false;
+
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.Type.DataType)
@@ -31,12 +33,6 @@
 				case DataType.Date           : StringBuilder.Append("DateTime");                     break;
 				default                      : base.BuildDataTypeFromDataType(type, forCreateTable); break;
 			}
-		}
-
-		protected override void BuildFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func);
-			base.BuildFunction(func);
 		}
 
 		public override string  Name => ProviderName.SqlServer2005;

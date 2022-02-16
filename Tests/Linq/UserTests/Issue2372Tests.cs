@@ -1,10 +1,8 @@
-﻿using NUnit.Framework;
-using System.Linq;
+﻿using System;
 using LinqToDB;
 using LinqToDB.Data;
-using System;
-using System.Collections.Generic;
 using LinqToDB.Mapping;
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -68,7 +66,7 @@ namespace Tests.UserTests
 					var dto1 = new InventoryResourceDTO
 					{
 						Status = InventoryResourceStatus.Used,
-						Id = Guid.NewGuid()
+						Id     = TestData.Guid1
 					};
 					db2.Insert(dto1);
 				}

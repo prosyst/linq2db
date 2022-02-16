@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-
 using LinqToDB;
 using LinqToDB.Data;
-
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
 	using Model;
-	using System.Threading;
 	using UserTests;
 
 	[TestFixture]
@@ -76,7 +74,7 @@ namespace Tests.Linq
 
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("-- Access")));
+					.Where(line => !line.StartsWith("--")));
 
 				var res = await conn.SetCommand(sql).ExecuteAsync<string>();
 
@@ -93,7 +91,7 @@ namespace Tests.Linq
 
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("-- Access")));
+					.Where(line => !line.StartsWith("--")));
 
 				var res = conn.SetCommand(sql).ExecuteAsync<string>().Result;
 
@@ -115,9 +113,9 @@ namespace Tests.Linq
 
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("-- Access")));
+					.Where(line => !line.StartsWith("--")));
 
-				using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
+				await using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
 				{
 					var list = await rd.QueryToArrayAsync<string>();
 
@@ -178,7 +176,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if !NET46
 		[Test]
 		public async Task AsAsyncEnumerable1Test([DataSources] string context)
 		{
@@ -252,6 +249,5 @@ namespace Tests.Linq
 				}
 			});
 		}
-#endif
 	}
 }

@@ -20,8 +20,8 @@ namespace LinqToDB.Metadata
 
 		public XmlAttributeReader(string xmlFile, Assembly assembly)
 		{
-			if (xmlFile  == null) throw new ArgumentNullException("xmlFile");
-			if (assembly == null) throw new ArgumentNullException("assembly");
+			if (xmlFile  == null) throw new ArgumentNullException(nameof(xmlFile));
+			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
 
 			StreamReader? streamReader = null;
 
@@ -108,6 +108,9 @@ namespace LinqToDB.Metadata
 		{
 			var doc = XDocument.Load(new StreamReader(xmlDocStream));
 
+			if (doc.Root == null)
+				throw new MetadataException($"'{fileName}': Root element missing.");
+
 			return doc.Root.Elements().Where(e => e.Name.LocalName == "Type").Select(t =>
 			{
 				var aname = t.Attribute("Name");
@@ -159,6 +162,6 @@ namespace LinqToDB.Metadata
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
-			=> new MemberInfo[0];
+			=> Array<MemberInfo>.Empty;
 	}
 }

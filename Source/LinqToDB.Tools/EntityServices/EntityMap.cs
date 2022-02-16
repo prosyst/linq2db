@@ -5,11 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Tools.EntityServices
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Common;
 	using LinqToDB.Expressions;
 	using Mapper;
@@ -32,7 +29,11 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<T,EntityMapEntry<T>> _entities;
 
-		public IReadOnlyDictionary<T,EntityMapEntry<T>>? Entities => _entities as IReadOnlyDictionary<T,EntityMapEntry<T>>;
+#if NET45
+		public IDictionary<T, EntityMapEntry<T>> Entities => _entities;
+#else
+		public IReadOnlyDictionary<T,EntityMapEntry<T>> Entities => _entities;
+#endif
 
 		void IEntityMap.MapEntity(EntityCreatedEventArgs args)
 		{
@@ -126,7 +127,7 @@ namespace LinqToDB.Tools.EntityServices
 				else
 				{
 					var keyExpression = Expression.Constant(key);
-					var expressions   = _keyColumns.Select(kc =>
+					var expressions   = _keyColumns!.Select(kc =>
 						Expression.Equal(
 							ExpressionHelper.PropertyOrField(p, kc.Name),
 							Expression.Convert(ExpressionHelper.PropertyOrField(keyExpression, kc.Name), kc.Type)) as Expression);
@@ -140,8 +141,7 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<Type,IKeyComparer>? _keyComparers;
 
-		[return: MaybeNull]
-		public T GetEntity(IDataContext context, object key)
+		public T? GetEntity(IDataContext context, object key)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 			if (key     == null) throw new ArgumentNullException(nameof(key));
@@ -153,7 +153,7 @@ namespace LinqToDB.Tools.EntityServices
 
 			var keyComparer = _keyComparers.GetOrAdd(
 				key.GetType(),
-				type => (IKeyComparer)Activator.CreateInstance(typeof(KeyComparer<>).MakeGenericType(typeof(T), type)));
+				type => (IKeyComparer)Activator.CreateInstance(typeof(KeyComparer<>).MakeGenericType(typeof(T), type))!);
 
 			var entity = keyComparer.MapKey(context.MappingSchema, key);
 

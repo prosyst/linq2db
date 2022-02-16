@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using SqlQuery;
+
 	abstract class QueryRunnerBase : IQueryRunner
 	{
 		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
@@ -19,8 +21,6 @@ namespace LinqToDB.Linq
 		}
 
 		protected readonly Query    Query;
-
-		protected List<string>?     QueryHints;
 
 		public IDataContext         DataContext      { get; set; }
 		public Expression           Expression       { get; set; }
@@ -44,34 +44,35 @@ namespace LinqToDB.Linq
 				DataContext.Close();
 		}
 
-		protected virtual void SetCommand(bool clearQueryHints)
+#if !NATIVE_ASYNC
+		public virtual Task DisposeAsync()
 		{
-			// TODO: can we refactor query to be thread-safe to remove this lock?
-			lock (Query)
-			{
-				if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
-				{
-					var queryContext = Query.Queries[QueryNumber];
+			if (DataContext.CloseAfterUse)
+				return DataContext.CloseAsync();
 
-					queryContext.QueryHints = new List<string>(DataContext.QueryHints);
-					queryContext.QueryHints.AddRange(DataContext.NextQueryHints);
+			return TaskEx.CompletedTask;
+		}
+#else
+		public virtual ValueTask DisposeAsync()
+		{
+			if (DataContext.CloseAfterUse)
+				return new ValueTask(DataContext.CloseAsync());
 
-					if (QueryHints == null)
-						QueryHints = new List<string>(DataContext.QueryHints.Count + DataContext.NextQueryHints.Count);
+			return default;
+		}
+#endif
 
-					QueryHints.AddRange(DataContext.QueryHints);
-					QueryHints.AddRange(DataContext.NextQueryHints);
 
-					if (clearQueryHints)
-						DataContext.NextQueryHints.Clear();
-				}
+		protected virtual void SetCommand(bool forGetSqlText)
+		{
+			var parameterValues = new SqlParameterValues();
 
-				QueryRunner.SetParameters(Query, Expression, DataContext, Parameters, QueryNumber);
-				SetQuery();
-			}
+			QueryRunner.SetParameters(Query, Expression, DataContext, Parameters, QueryNumber, parameterValues);
+
+			SetQuery(parameterValues, forGetSqlText);
 		}
 
-		protected abstract void   SetQuery  ();
+		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText);
 
 		public    abstract string GetSqlText();
 	}

@@ -10,6 +10,7 @@ namespace LinqToDB.Data
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
+	using LinqToDB.Common;
 	using Mapping;
 	using Reflection;
 
@@ -18,8 +19,8 @@ namespace LinqToDB.Data
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
 		public        readonly ParameterExpression DataReaderLocal;
 
-		public readonly List<ParameterExpression>  BlockVariables   = new List<ParameterExpression>();
-		public readonly List<Expression>           BlockExpressions = new List<Expression>();
+		public readonly List<ParameterExpression>  BlockVariables   = new ();
+		public readonly List<Expression>           BlockExpressions = new ();
 
 		public IDataContext           DataContext   { get; }
 		public MappingSchema          MappingSchema { get; }
@@ -130,8 +131,8 @@ namespace LinqToDB.Data
 			(
 				from info in GetReadIndexes(entityDescriptor)
 				where info.Column.Storage != null ||
-				      !(info.Column.MemberAccessor.MemberInfo is PropertyInfo) ||
-				      ((PropertyInfo) info.Column.MemberAccessor.MemberInfo).GetSetMethod(true) != null
+				      info.Column.MemberAccessor.MemberInfo is not PropertyInfo pi ||
+				      pi.GetSetMethod(true) != null
 				select new
 				{
 					Column = info.Column,
@@ -158,7 +159,7 @@ namespace LinqToDB.Data
 
 				exprs.AddRange(
 					members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-						m.Column.MemberAccessor.SetterExpression!.GetBody(obj, m.Expr)));
+						m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
 
 				exprs.Add(obj);
 
@@ -294,7 +295,10 @@ namespace LinqToDB.Data
 
 			var lambda = Expression.Lambda<Func<IDataReader,T>>(BuildBlock(expr), DataReaderParam);
 
-			return lambda.Compile();
+			if (Configuration.OptimizeForSequentialAccess)
+				lambda = (Expression<Func<IDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
+
+			return lambda.CompileExpression();
 		}
 
 		private Expression BuildReaderExpression()
@@ -330,11 +334,10 @@ namespace LinqToDB.Data
 				if (dindex >= 0)
 				{
 					expr = Expression.Convert(
-						Expression.Call(null, exceptionMethod,
-							Expression.Call(
-								DataReaderLocal,
-								ReflectionHelper.DataReader.GetValue,
-								Expression.Constant(dindex)),
+						Expression.Call(
+							null,
+							exceptionMethod,
+							new ConvertFromDataReaderExpression(typeof(object), dindex, null, DataReaderLocal, DataContext),
 							Expression.Constant(ObjectType)),
 						ObjectType);
 				}
@@ -357,7 +360,7 @@ namespace LinqToDB.Data
 					var isNullExpr = Expression.Call(
 						DataReaderLocal,
 						ReflectionHelper.DataReader.IsDBNull,
-						Expression.Constant(dindex));
+						ExpressionInstances.Int32Array(dindex));
 
 					if (mapping.m.Code == null)
 					{

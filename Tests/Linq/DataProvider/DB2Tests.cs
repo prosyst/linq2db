@@ -11,7 +11,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
-#if NET46
+#if NET472
 using IBM.Data.DB2;
 #else
 using IBM.Data.DB2.Core;
@@ -23,8 +23,10 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Collections.Generic;
 	using System.Globalization;
 	using System.Threading.Tasks;
+	using LinqToDB.SchemaProvider;
 	using LinqToDB.Tools.Comparers;
 	using Model;
 
@@ -333,7 +335,7 @@ namespace Tests.DataProvider
 					conn.Execute<Guid?>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as varchar(38)) FROM SYSIBM.SYSDUMMY1"),
 					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
 
-				var guid = Guid.NewGuid();
+				var guid = TestData.Guid1;
 
 				Assert.That(conn.Execute<Guid>("SELECT Cast(@p as char(16) for bit data) FROM SYSIBM.SYSDUMMY1", DataParameter.Create("p", guid)),                Is.EqualTo(guid));
 				Assert.That(conn.Execute<Guid>("SELECT Cast(@p as char(16) for bit data) FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
@@ -424,7 +426,7 @@ namespace Tests.DataProvider
 								VARBINARYDATATYPE = null,
 								BLOBDATATYPE      = new byte[] { 1, 2, 3 },
 								GRAPHICDATATYPE   = null,
-								DATEDATATYPE      = DateTime.Now,
+								DATEDATATYPE      = TestData.DateTime,
 								TIMEDATATYPE      = null,
 								TIMESTAMPDATATYPE = null,
 								XMLDATATYPE       = null,
@@ -471,7 +473,7 @@ namespace Tests.DataProvider
 								VARBINARYDATATYPE = null,
 								BLOBDATATYPE      = new byte[] { 1, 2, 3 },
 								GRAPHICDATATYPE   = null,
-								DATEDATATYPE      = DateTime.Now,
+								DATEDATATYPE      = TestData.DateTime,
 								TIMEDATATYPE      = null,
 								TIMESTAMPDATATYPE = null,
 								XMLDATATYPE       = null,
@@ -526,7 +528,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -557,7 +559,7 @@ namespace Tests.DataProvider
 									MoneyValue    = 1000m + n,
 									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
 									BoolValue     = true,
-									GuidValue     = Guid.NewGuid(),
+									GuidValue     = TestData.SequentialGuid(n),
 									SmallIntValue = (short)n
 								}
 							));
@@ -609,7 +611,7 @@ namespace Tests.DataProvider
 					var sb = new StringBuilder();
 
 					for (var i = 0; i < 100000; i++)
-						sb.Append(((char)((i % byte.MaxValue) + 32)).ToString());
+						sb.Append((char)((i % byte.MaxValue) + 32));
 
 					var data = sb.ToString();
 
@@ -894,6 +896,32 @@ namespace Tests.DataProvider
 				var result = query.ToArray();
 
 				Assert.True(db.LastQuery!.Contains("@"));
+			}
+		}
+
+		[Test]
+		public void Issue2763Test([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				// DB2 SYSCAT.COLUMNS.TABSCHEMA column is padded with spaces to max(schema.length) length despite it being of varchar type
+				var schemas = db.Query<string>("SELECT SCHEMANAME FROM SYSCAT.SCHEMATA").AsEnumerable().Select(_ => _.TrimEnd(' ')).ToArray();
+
+				if (schemas.Select(_ => _.Length).Distinct().Count() < 2)
+					Assert.Inconclusive("Test requires at least two schemas with different name length");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { IncludedSchemas = schemas });
+
+				var usedSchemas = new HashSet<string>();
+				foreach (var table in schema.Tables)
+				{
+					Assert.False(table.ID!.Contains(' '));
+					Assert.False(table.SchemaName!.EndsWith(" "));
+					Assert.False(table.Columns.Count == 0);
+					usedSchemas.Add(table.SchemaName!);
+				}
+
+				Assert.True(usedSchemas.Select(_ => _.Length).Distinct().Count() > 1);
 			}
 		}
 	}

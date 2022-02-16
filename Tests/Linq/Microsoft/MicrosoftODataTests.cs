@@ -1,21 +1,30 @@
-﻿#if NET46
+﻿#if !NETCOREAPP2_1
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
-using System.Web.Http;
-using System.Web.Http.Hosting;
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
+using NUnit.Framework;
+
+#if NETFRAMEWORK
+using System.Net.Http;
+using System.Web.Http;
+using System.Web.Http.Hosting;
 using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
-using NUnit.Framework;
+#else
+using Microsoft.OData.UriParser;
+using Microsoft.OData.ModelBuilder;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+#endif
 
 namespace Tests.OData.Microsoft
 {
@@ -40,30 +49,51 @@ namespace Tests.OData.Microsoft
 		{
 			var elementType = query.ElementType;
 			var method = _toArray.MakeGenericMethod(elementType);
-			return (ICollection)method.Invoke(null, new object[] { query });
+			return (ICollection)method.Invoke(null, new object[] { query })!;
+		}
+
+		public class ODataQueries
+		{
+			private readonly string _name;
+
+			public ODataQueries(string testCaseName, string query)
+			{
+				_name = testCaseName;
+				Query = query;
+			}
+
+			public string Query { get; }
+
+			public override string ToString() => _name;
+		}
+
+		public static IEnumerable<ODataQueries> ODataQueriesTestCases
+		{
+			get
+			{
+				yield return new ODataQueries("Query 01", "/odata/PersonClass?$apply=groupby((Title),aggregate(YearsExperience%20with%20sum%20as%20TotalExperience))");
+				yield return new ODataQueries("Query 02", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with countdistinct as Test))");
+				yield return new ODataQueries("Query 03", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with sum as TotalExperience))&$orderby=TotalExperience");
+				yield return new ODataQueries("Query 04", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with min as Test))&$orderby=Test");
+				yield return new ODataQueries("Query 05", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with max as Test))&$orderby=Test");
+				yield return new ODataQueries("Query 06", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with average as Test))&$orderby=Test");
+				yield return new ODataQueries("Query 07", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with countdistinct as Test))&$orderby=Test");
+				yield return new ODataQueries("Query 08", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with sum as Test))");
+				yield return new ODataQueries("Query 09", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with average as Test))");
+				yield return new ODataQueries("Query 10", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with min as Test))");
+				yield return new ODataQueries("Query 11", "/odata/People?$apply=groupby((Title),aggregate(YearsExperience with max as Test))");
+				yield return new ODataQueries("Query 12", "/odata/People?$apply=groupby((Title),aggregate($count as NumPeople))&$orderby=NumPeople");
+				yield return new ODataQueries("Query 13", "/odata/People?$apply=groupby((Title),aggregate($count as NumPeople))&$count=true");
+				yield return new ODataQueries("Query 14", "/odata/People?$apply=filter(Title eq 'Engineer' or Title eq 'QA')/groupby((Title),aggregate($count as NumPeople))&$count=true");
+				//"/odata/People?$apply=groupby((Office/Name),aggregate($count as NumPeople))&$count=true",
+				//"/odata/People?$apply=filter(Title eq 'QA')/groupby((Office/Id,Office/Name),aggregate($count as NumPeople))&$count=true&$orderby=NumPeople desc"
+			}
 		}
 
 		[Test]
 		public void SelectViaOData(
 			[IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context,
-			[Values(
-			 "/odata/PersonClass?$apply=groupby((Title),aggregate(YearsExperience%20with%20sum%20as%20TotalExperience))",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with countdistinct as Test))",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with sum as TotalExperience))&$orderby=TotalExperience",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with min as Test))&$orderby=Test",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with max as Test))&$orderby=Test",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with average as Test))&$orderby=Test",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with countdistinct as Test))&$orderby=Test",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with sum as Test))",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with average as Test))",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with min as Test))",
-			"/odata/People?$apply=groupby((Title),aggregate(YearsExperience with max as Test))",
-			"/odata/People?$apply=groupby((Title),aggregate($count as NumPeople))&$orderby=NumPeople",
-			"/odata/People?$apply=groupby((Title),aggregate($count as NumPeople))&$count=true",
-			"/odata/People?$apply=filter(Title eq 'Engineer' or Title eq 'QA')/groupby((Title),aggregate($count as NumPeople))&$count=true"
-			//"/odata/People?$apply=groupby((Office/Name),aggregate($count as NumPeople))&$count=true",
-			//"/odata/People?$apply=filter(Title eq 'QA')/groupby((Office/Id,Office/Name),aggregate($count as NumPeople))&$count=true&$orderby=NumPeople desc"
-			)] string oDataQuery)
+			[ValueSource(nameof(ODataQueriesTestCases))] ODataQueries testCase)
 		{
 			var modelBuilder = new ODataModelBuilder();
 			var person = modelBuilder.EntityType<PersonClass>();
@@ -80,21 +110,35 @@ namespace Tests.OData.Microsoft
 				var path = new ODataPath();
 				ODataQueryContext queryContext = new ODataQueryContext(model, typeof(PersonClass), path);
 
+				var uri = new Uri("http://localhost:15580" + testCase.Query);
+#if NETFRAMEWORK
 				var request = new HttpRequestMessage()
 				{
 					Method = HttpMethod.Get,
-					RequestUri =
-						new Uri("http://localhost:15580" + oDataQuery)
+					RequestUri = uri
 				};
 
 				var config = new HttpConfiguration();
 				config.EnableDependencyInjection();
 
 				request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, config);
+#else
+				// https://github.com/OData/AspNetCoreOData/blob/master/test/Microsoft.AspNetCore.OData.Tests/Extensions/RequestFactory.cs#L78
+				var  httpContext    = new DefaultHttpContext();
+				HttpRequest request = httpContext.Request;
 
+				IServiceCollection services = new ServiceCollection();
+				httpContext.RequestServices = services.BuildServiceProvider();
+
+				request.Method      = "GET";
+				request.Scheme      = uri.Scheme;
+				request.Host        = uri.IsDefaultPort ? new HostString(uri.Host) : new HostString(uri.Host, uri.Port);
+				request.QueryString = new QueryString(uri.Query);
+				request.Path        = new PathString(uri.AbsolutePath);
+#endif
 				var options = new ODataQueryOptions(queryContext, request);
 
-				var resultQuery = options.ApplyTo(table);
+				var resultQuery  = options.ApplyTo(table);
 				var materialized = Materialize(resultQuery);
 				Assert.That(materialized.Count, Is.EqualTo(1));
 			}

@@ -20,8 +20,8 @@ namespace LinqToDB.DataProvider.SapHana
 				.Where(x=> x["ProviderDbType"] != DBNull.Value)
 				.Select(t => new DataTypeInfo
 				{
-					TypeName         = t.Field<string>("TypeName"),
-					DataType         = t.Field<string>("DataType"),
+					TypeName         = t.Field<string>("TypeName")!,
+					DataType         = t.Field<string>("DataType")!,
 					CreateFormat     = t.Field<string>("CreateFormat"),
 					CreateParameters = t.Field<string>("CreateParameters"),
 					ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),
@@ -51,14 +51,15 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			return dataConnection.Query(rd =>
 			{
+				// IMPORTANT: reader calls must be ordered to support SequentialAccess
+				var schema     = rd.GetString(0);
+				var tableName  = rd.GetString(1);
+				var indexName  = rd.GetString(2);
 				var constraint = rd.IsDBNull(3) ? null : rd.GetString(3);
 
 				if (constraint != "PRIMARY KEY")
 					return null;
 
-				var schema     = rd.GetString(0);
-				var tableName  = rd.GetString(1);
-				var indexName  = rd.GetString(2);
 				var columnName = rd.GetString(4);
 				var position   = rd.GetInt32(5);
 

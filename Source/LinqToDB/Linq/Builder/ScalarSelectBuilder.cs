@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 				return Parent?.ConvertToParentIndex(index, context) ?? index;
 			}
 
-			public void SetAlias(string alias)
+			public void SetAlias(string? alias)
 			{
 			}
 
@@ -137,6 +137,10 @@ namespace LinqToDB.Linq.Builder
 			public virtual SqlStatement GetResultStatement()
 			{
 				return Statement ??= new SqlSelectStatement(SelectQuery);
+			}
+
+			public void CompleteColumns()
+			{
 			}
 		}
 	}

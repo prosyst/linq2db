@@ -60,12 +60,20 @@ namespace LinqToDB.Linq.Builder
 			return Sequence.GetResultStatement();
 		}
 
+		public void CompleteColumns()
+		{
+			foreach (var sequence in Sequences)
+			{
+				sequence.CompleteColumns();
+			}
+		}
+
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)
 		{
 			return Parent?.ConvertToParentIndex(index, context) ?? index;
 		}
 
-		public virtual void SetAlias(string alias)
+		public virtual void SetAlias(string? alias)
 		{
 			if (SelectQuery.Select.Columns.Count == 1)
 			{

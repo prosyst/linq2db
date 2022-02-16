@@ -133,7 +133,7 @@ CREATE Procedure Person_SelectByKeyLowercase
 	@id int
 AS
 
-SELECT personid, firstname FROM Person WHERE PersonID = @id
+SELECT PersonID, FirstName FROM Person WHERE PersonID = @id
 
 GO
 
@@ -476,7 +476,12 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2012 BEGIN
 -- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlServer.2016 BEGIN
 -- SKIP SqlServer.2017 BEGIN
+-- SKIP SqlServer.2019 BEGIN
+-- SKIP SqlServer.2019.SA BEGIN
+-- SKIP SqlServer.2019.FEC BEGIN
+-- SKIP SqlServer.Contained BEGIN
 -- SKIP SqlAzure BEGIN
 	datetime2DataType        varchar(50)       NULL,
 	datetimeoffsetDataType   varchar(50)       NULL,
@@ -493,7 +498,12 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2008 END
 -- SKIP SqlServer.2012 END
 -- SKIP SqlServer.2014 END
+-- SKIP SqlServer.2016 END
 -- SKIP SqlServer.2017 END
+-- SKIP SqlServer.2019 END
+-- SKIP SqlServer.2019.SA END
+-- SKIP SqlServer.2019.FEC END
+-- SKIP SqlServer.Contained END
 -- SKIP SqlAzure END
 
 ) ON [PRIMARY]
@@ -675,7 +685,12 @@ GO
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2012 BEGIN
 -- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlServer.2016 BEGIN
 -- SKIP SqlServer.2017 BEGIN
+-- SKIP SqlServer.2019 BEGIN
+-- SKIP SqlServer.2019.SA BEGIN
+-- SKIP SqlServer.2019.FEC BEGIN
+-- SKIP SqlServer.Contained BEGIN
 -- SKIP SqlAzure BEGIN
 CREATE TABLE LinqDataTypes
 (
@@ -695,7 +710,12 @@ GO
 -- SKIP SqlAzure END
 -- SKIP SqlServer.2012 END
 -- SKIP SqlServer.2014 END
+-- SKIP SqlServer.2016 END
 -- SKIP SqlServer.2017 END
+-- SKIP SqlServer.2019 END
+-- SKIP SqlServer.2019.SA END
+-- SKIP SqlServer.2019.FEC END
+-- SKIP SqlServer.Contained END
 -- SKIP SqlServer.2008 END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
@@ -954,7 +974,7 @@ BEGIN
 END
 GO
 
-IF EXISTS (SELECT  schema_name FROM    information_schema.schemata WHERE   schema_name = 'TestSchema')
+IF EXISTS (SELECT  SCHEMA_NAME FROM    INFORMATION_SCHEMA.SCHEMATA WHERE   SCHEMA_NAME = 'TestSchema')
 BEGIN
 	DROP SCHEMA [TestSchema]
 END
@@ -1096,12 +1116,12 @@ BEGIN
 	Create Table #PeopleIds (
 		PersonID int
 	);
-	INSERT INTO #PeopleIds 
-	SELECT Person.PersonID 
+	INSERT INTO #PeopleIds
+	SELECT Person.PersonID
 	FROM Person
-	WHERE LOWER(FirstName) like '%' + @nameFilter + '%'
-	OR LOWER(LastName) like '%' + @nameFilter + '%';
-	
+	WHERE FirstName like '%' + @nameFilter + '%'
+	OR LastName like '%' + @nameFilter + '%';
+
 	-- 0: List of matching person ids.
 	SELECT PersonID FROM #PeopleIds;
 
@@ -1114,20 +1134,20 @@ BEGIN
 	IN (SELECT PersonID FROM #PeopleIds);
 
 	-- 3: Is doctor in the results.
-	SELECT 
+	SELECT
 	CASE WHEN COUNT(*) >= 1 THEN
 		CAST (1 as BIT)
 	ELSE
 		CAST (0 as BIT)
 	END
-	FROM Doctor 
+	FROM Doctor
 	WHERE Doctor.PersonID
 	IN (SELECT PersonID FROM #PeopleIds);
-	
+
 	-- 4: List of matching persons again.
 	SELECT * FROM Person WHERE Person.PersonID
 	IN (SELECT PersonID FROM #PeopleIds) ORDER BY LastName;
-	
+
 	-- 5: Number of matched people.
 	SELECT COUNT(*) FROM #PeopleIds;
 
@@ -1227,4 +1247,47 @@ AS
 SET @output = @input + 1
 SELECT N'издрасте'
 
+GO
+-- ScalarFunction function
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'FN' AND name = 'ScalarFunction')
+BEGIN DROP FUNCTION ScalarFunction
+END
+GO
+CREATE FUNCTION ScalarFunction(@value INT)
+RETURNS INT
+AS
+BEGIN
+	RETURN @value
+END
+GO
+
+
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> procedure!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'PROCEDURE', @level1name=N'ExecuteProcStringParameters'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> procedure parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'PROCEDURE', @level1name=N'ExecuteProcStringParameters', @level2type=N'PARAMETER', @level2name=N'@input'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> table function!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'GetParentByID'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> table function parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'GetParentByID', @level2type=N'PARAMETER', @level2name=N'@id'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> scalar function!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'ScalarFunction'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> scalar function parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'ScalarFunction', @level2type=N'PARAMETER', @level2name=N'@value'
+GO
+
+-- test T4 name conflict
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.DataType') AND type in (N'U'))
+BEGIN DROP TABLE dbo.DataType END
+GO
+
+CREATE TABLE DataType
+(
+	id INT NOT NULL
+
+)
+GO
+
+DROP TABLE CollatedTable
+GO
+CREATE TABLE CollatedTable
+(
+	Id				INT NOT NULL,
+	CaseSensitive	NVARCHAR(20) COLLATE Latin1_General_CS_AI NOT NULL,
+	CaseInsensitive	NVARCHAR(20) COLLATE Latin1_General_CI_AI NOT NULL
+)
 GO

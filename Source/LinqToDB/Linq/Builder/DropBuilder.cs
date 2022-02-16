@@ -23,13 +23,14 @@ namespace LinqToDB.Linq.Builder
 
 			if (methodCall.Arguments.Count == 2)
 			{
-				if (methodCall.Arguments[1] is ConstantExpression c)
+				if (methodCall.Arguments[1].Type == typeof(bool))
 				{
-					ifExists = !(bool)c.Value;
+					ifExists = !(bool)methodCall.Arguments[1].EvaluateExpression()!;
 				}
 			}
 
-			sequence.Statement = new SqlDropTableStatement(ifExists) {Table = sequence.SqlTable};
+			sequence.SqlTable.Set(ifExists, TableOptions.DropIfExists);
+			sequence.Statement = new SqlDropTableStatement(sequence.SqlTable);
 
 			return new DropContext(buildInfo.Parent, sequence);
 		}

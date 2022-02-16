@@ -6,6 +6,9 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Data;
 	using SchemaProvider;
 
+	// In theory we can load description field using fn_listextendedproperty table function,
+	// but it will require separate call for each table/column/procedure/parameter
+	// as SQL Server 2000 doesn't support OUTER APPLY or dynamic parameters for function
 	public class SqlServer2000SchemaProvider : SqlServerSchemaProvider
 	{
 		public SqlServer2000SchemaProvider(SqlServerDataProvider provider)
@@ -23,7 +26,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return dataConnection.Query<TableInfo>(@"
 				SELECT
-					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
 					TABLE_CATALOG                                         as CatalogName,
 					TABLE_SCHEMA                                          as SchemaName,
 					TABLE_NAME                                            as TableName,
@@ -38,7 +41,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return dataConnection.Query<ColumnInfo>(@"
 				SELECT
-					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
 					COLUMN_NAME                                           as Name,
 					CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END       as IsNullable,
 					ORDINAL_POSITION                                      as Ordinal,
@@ -62,7 +65,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return dataConnection.Query<ProcedureInfo>(@"
 				SELECT
-					SPECIFIC_CATALOG + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME                as ProcedureID,
+					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
 					SPECIFIC_CATALOG                                                              as CatalogName,
 					SPECIFIC_SCHEMA                                                               as SchemaName,
 					SPECIFIC_NAME                                                                 as ProcedureName,
@@ -80,9 +83,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return dataConnection.Query<ForeignKeyInfo>(@"
 				SELECT
 					rc.CONSTRAINT_NAME                                             as Name,
-					fk.TABLE_CATALOG + '.' + fk.TABLE_SCHEMA + '.' + fk.TABLE_NAME as ThisTableID,
+					fk.TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + fk.TABLE_SCHEMA + '.' + fk.TABLE_NAME as ThisTableID,
 					fk.COLUMN_NAME                                                 as ThisColumn,
-					pk.TABLE_CATALOG + '.' + pk.TABLE_SCHEMA + '.' + pk.TABLE_NAME as OtherTableID,
+					pk.TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + pk.TABLE_SCHEMA + '.' + pk.TABLE_NAME as OtherTableID,
 					pk.COLUMN_NAME                                                 as OtherColumn,
 					pk.ORDINAL_POSITION                                            as Ordinal
 				FROM
@@ -106,5 +109,29 @@ namespace LinqToDB.DataProvider.SqlServer
 					Ordinal")
 				.ToList();
 		}
+
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
+		{
+			return dataConnection.Query<ProcedureParameterInfo>(
+				@"SELECT
+					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
+					ORDINAL_POSITION                                                                        as Ordinal,
+					PARAMETER_MODE                                                                          as Mode,
+					PARAMETER_NAME                                                                          as ParameterName,
+					DATA_TYPE                                                                               as DataType,
+					CHARACTER_MAXIMUM_LENGTH                                                                as Length,
+					NUMERIC_PRECISION                                                                       as [Precision],
+					NUMERIC_SCALE                                                                           as Scale,
+					CASE WHEN PARAMETER_MODE = 'IN'  OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsIn,
+					CASE WHEN PARAMETER_MODE = 'OUT' OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsOut,
+					CASE WHEN IS_RESULT      = 'YES'                             THEN 1 ELSE 0 END          as IsResult,
+					USER_DEFINED_TYPE_CATALOG                                                               as UDTCatalog,
+					USER_DEFINED_TYPE_SCHEMA                                                                as UDTSchema,
+					USER_DEFINED_TYPE_NAME                                                                  as UDTName,
+					1                                                                                       as IsNullable
+				FROM
+					INFORMATION_SCHEMA.PARAMETERS")
+				.ToList();
 	}
+}
 }

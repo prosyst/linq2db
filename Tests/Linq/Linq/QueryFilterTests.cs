@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using NpgsqlTypes;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.Linq
 {
 	[TestFixture]
 	public class QueryFilterTests : TestBase
@@ -55,6 +55,19 @@ namespace Tests.Playground
 			[Column] public int? MasterId { get; set; }
 		}
 
+
+		static MappingSchema _filterMappingSchema;
+
+		static QueryFilterTests()
+		{
+			var builder = new MappingSchema().GetFluentMappingBuilder();
+
+			builder.Entity<MasterClass>().HasQueryFilter((q, dc) => q.Where(e => !((DcParams)((MyDataContext)dc).Params).IsSoftDeleteFilterEnabled || !e.IsDeleted));
+
+			_filterMappingSchema = builder.MappingSchema;
+		}
+
+
 		static Tuple<MasterClass[], InfoClass[], DetailClass[]> GenerateTestData()
 		{
 			var masterRecords = Enumerable.Range(1, 10)
@@ -99,6 +112,13 @@ namespace Tests.Playground
 			}
 
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
+
+			public object Params { get; } = new DcParams();
+		}
+
+		class DcParams
+		{
+			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
 		}
 
 		[Test]
@@ -113,7 +133,6 @@ namespace Tests.Playground
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
@@ -132,6 +151,7 @@ namespace Tests.Playground
 			var resultFiltered1 = query.ToArray();
 
 			db.IsSoftDeleteFilterEnabled = false;
+			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultNotFiltered1 = query.ToArray();
 
 			Assert.That(resultFiltered1.Length, Is.LessThan(resultNotFiltered1.Length));
@@ -139,9 +159,11 @@ namespace Tests.Playground
 			var currentMissCount = Query<T>.CacheMissCount;
 
 			db.IsSoftDeleteFilterEnabled = true;
+			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultFiltered2 = query.ToArray();
 
 			db.IsSoftDeleteFilterEnabled = false;
+			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultNotFiltered2 = query.ToArray();
 
 			Assert.That(resultFiltered2.Length, Is.LessThan(resultNotFiltered2.Length));
@@ -154,7 +176,37 @@ namespace Tests.Playground
 		}
 
 		[Test]
-		public void AssociationToFilteredEntity([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void EntityFilterTestsCache([IncludeDataSources(false, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int iteration, [Values] bool filtered)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = new MyDataContext(context, _filterMappingSchema))
+			using (db.CreateLocalTable(testData.Item1))
+			{
+
+				var currentMissCount = Query<MasterClass>.CacheMissCount;
+
+				var query = from m in db.GetTable<MasterClass>()
+					select m;
+
+				((DcParams)db.Params).IsSoftDeleteFilterEnabled = filtered;
+
+				var result = query.ToList();
+
+				if (filtered)
+					result.Count.Should().BeLessThan(testData.Item1.Length);
+				else
+					result.Count.Should().Be(testData.Item1.Length);
+
+				if (iteration > 1)
+				{
+					Query<MasterClass>.CacheMissCount.Should().Be(currentMissCount);
+				}
+			}
+		}
+
+		[Test]
+		public void AssociationToFilteredEntity([IncludeDataSources(false, ProviderName.SQLiteMS)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -165,14 +217,13 @@ namespace Tests.Playground
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
 			{
 				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
-					from d in m.Details
+					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);
@@ -192,14 +243,13 @@ namespace Tests.Playground
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
 			{
 				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
-					from d in m.Details
+					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);
@@ -234,14 +284,13 @@ namespace Tests.Playground
 
 			var ms = builder.MappingSchema;
 
-			using (new AllowMultipleQuery())
 			using (var db = new MyDataContext(context, ms))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
 			{
 				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
-					from d in m.Details
+					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);

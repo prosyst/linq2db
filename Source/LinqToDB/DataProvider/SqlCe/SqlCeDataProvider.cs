@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -11,8 +13,6 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{
@@ -33,8 +33,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsOrderByAggregateFunctionsSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
 			SqlProviderFlags.IsUpdateFromSupported                = false;
+			SqlProviderFlags.IsGroupByExpressionSupported         = false;
 
-			SetCharFieldToType<char>("NChar", (r, i) => DataTools.GetChar(r, i));
+			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
 			SetCharField("NChar",    (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -43,6 +44,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		#region Overrides
+
+		public override TableOptions SupportedTableOptions => TableOptions.None;
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
@@ -111,7 +114,8 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.UInt32     : parameter.DbType = DbType.Int64;             return;
 				case DataType.UInt64     : parameter.DbType = DbType.Decimal;           return;
 				case DataType.VarNumeric : parameter.DbType = DbType.Decimal;           return;
-				case DataType.Char       : parameter.DbType = DbType.StringFixedLength; return;
+				case DataType.Char       : 
+				case DataType.NChar      : parameter.DbType = DbType.String;            return;
 				case DataType.Date       :
 				case DataType.DateTime2  : parameter.DbType = DbType.DateTime;          return;
 				case DataType.Money      : parameter.DbType = DbType.Currency;          return;
@@ -156,7 +160,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

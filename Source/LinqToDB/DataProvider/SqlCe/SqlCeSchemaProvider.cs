@@ -89,7 +89,7 @@ SELECT
 				select new ColumnInfo
 				{
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
-					Name       = c.Field<string>("COLUMN_NAME"),
+					Name       = c.Field<string>("COLUMN_NAME")!,
 					IsNullable = c.Field<string>("IS_NULLABLE") == "YES",
 					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType   = c.Field<string>("DATA_TYPE"),
@@ -119,9 +119,9 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 			return data.ToList();
 		}
 
-		protected override string GetDatabaseName(DataConnection connection)
+		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return Path.GetFileNameWithoutExtension(((DbConnection)connection.Connection).Database);
+			return Path.GetFileNameWithoutExtension(((DbConnection)dbConnection.Connection).Database);
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
