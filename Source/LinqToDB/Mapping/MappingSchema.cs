@@ -1657,8 +1657,8 @@ namespace LinqToDB.Mapping
 						context.EntityDescriptorCreatedCallback?.Invoke(context, edNew);
 						return edNew;
 					});
+				return ed;
 			}
-			return ed;
 		}
 
 		/// <summary>
