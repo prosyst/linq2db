@@ -22,3 +22,6 @@ linq2db.sln.ide/
 *.lock.json
 /.idea/
 /.temp
+/.vscode/tasks.json
+/Source/LinqToDB/.vscode/tasks.json
+/atu.bat
