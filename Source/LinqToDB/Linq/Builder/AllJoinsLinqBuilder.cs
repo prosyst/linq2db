@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -8,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class AllJoinsLinqBuilder : MethodCallBuilder
+	sealed class AllJoinsLinqBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames4 = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
 
@@ -27,6 +28,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+
+			List<SqlQueryExtension>? extensions = null;
+
+			if (innerContext is QueryExtensionBuilder.JoinHintContext jhc)
+			{
+				innerContext = jhc.Context;
+				extensions   = jhc.Extensions;
+			}
 
 			JoinType joinType;
 			var conditionIndex = 2;
@@ -55,7 +64,6 @@ namespace LinqToDB.Linq.Builder
 			if (joinType == JoinType.Right || joinType == JoinType.Full)
 				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null);
 			outerContext = new SubQueryContext(outerContext);
-
 
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
 				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null);
@@ -86,8 +94,11 @@ namespace LinqToDB.Linq.Builder
 
 				outerContext.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
+				if (extensions != null)
+					join.JoinedTable.SqlQueryExtensions = extensions;
+
 				builder.BuildSearchCondition(
-					joinContext, 
+					joinContext,
 					conditionExpr,
 					@join.JoinedTable.Condition.Conditions);
 			}
@@ -99,13 +110,7 @@ namespace LinqToDB.Linq.Builder
 			return joinContext;
 		}
 
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression? param)
-		{
-			return null;
-		}
-
-		class JoinContext : SelectContext
+		sealed class JoinContext : SelectContext
 		{
 			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, outerContext, innerContext)
 			{
@@ -136,8 +141,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (result == null)
-					result = base.ConvertToSql(expression, level, flags);
+				result ??= base.ConvertToSql(expression, level, flags);
 
 				return result;
 			}

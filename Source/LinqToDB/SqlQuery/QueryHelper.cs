@@ -17,7 +17,7 @@ namespace LinqToDB.SqlQuery
 			return null != testedRoot.Find(element, static (element, e) => e == element);
 		}
 
-		private class IsDependsOnSourcesContext
+		private sealed class IsDependsOnSourcesContext
 		{
 			public IsDependsOnSourcesContext(HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -73,7 +73,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class IsDependsOnElementContext
+		private sealed class IsDependsOnElementContext
 		{
 			public IsDependsOnElementContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -105,7 +105,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class DependencyCountContext
+		private sealed class DependencyCountContext
 		{
 			public DependencyCountContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -187,6 +187,24 @@ namespace LinqToDB.SqlQuery
 					var binary = (SqlBinaryExpression)expr;
 					return GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
 				}
+				case QueryElementType.SqlFunction:
+				{
+					var function = (SqlFunction)expr;
+
+					//TODO: unify function names and put in common constant storage
+					//For example it should be "$COALESCE$" and "$CASE$" do do not mix with user defined extension
+
+					if (function.Name is "Coalesce" or PseudoFunctions.COALESCE && function.Parameters.Length == 2)
+					{
+						return GetColumnDescriptor(function.Parameters[0]);
+					}
+					else if (function.Name == "CASE" && function.Parameters.Length == 3)
+					{
+						return GetColumnDescriptor(function.Parameters[1]) ??
+						       GetColumnDescriptor(function.Parameters[2]);
+					}
+					break;
+				}
 			}
 			return null;
 		}
@@ -236,11 +254,6 @@ namespace LinqToDB.SqlQuery
 					if (query.Select.Columns.Count == 1)
 						return SuggestDbDataType(query.Select.Columns[0]);
 					break;
-				}
-				case QueryElementType.SqlBinaryExpression:
-				{
-					var binary = (SqlBinaryExpression)expr;
-					return SuggestDbDataType(binary.Expr1) ?? SuggestDbDataType(binary.Expr2);
 				}
 				case QueryElementType.SqlValue:
 				{
@@ -520,15 +533,20 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsEqualTables(SqlTable? table1, SqlTable? table2)
 		{
+			if (table1 == null || table2 == null)
+				return false;
+
 			var result =
-				table1                 != null
-				&& table2              != null
-				&& table1.ObjectType   == table2.ObjectType
-				&& table1.Database     == table2.Database
-				&& table1.Server       == table2.Server
-				&& table1.Schema       == table2.Schema
-				&& table1.Name         == table2.Name
-				&& table1.PhysicalName == table2.PhysicalName;
+				table1.ObjectType   == table2.ObjectType &&
+				table1.TableName    == table2.TableName  &&
+				table1.Expression   == table2.Expression;
+
+			if (result)
+			{
+				result =
+					(table1.SqlQueryExtensions == null || table1.SqlQueryExtensions.Count == 0) &&
+					(table2.SqlQueryExtensions == null || table2.SqlQueryExtensions.Count == 0);
+			}
 
 			return result;
 		}
@@ -570,8 +588,6 @@ namespace LinqToDB.SqlQuery
 		public static IEnumerable<SqlTable> EnumerateAccessibleTables(SelectQuery selectQuery)
 		{
 			return EnumerateAccessibleSources(selectQuery)
-				.OfType<SqlTableSource>()
-				.Select(static ts => ts.Source)
 				.OfType<SqlTable>();
 		}
 
@@ -885,7 +901,7 @@ namespace LinqToDB.SqlQuery
 					current = column.Expression;
 				else if (current is SqlFunction func)
 				{
-					if (func.Name == "$Convert$")
+					if (func.Name == PseudoFunctions.CONVERT)
 						current = func.Parameters[2];
 					else
 						break;
@@ -1038,7 +1054,7 @@ namespace LinqToDB.SqlQuery
 		///     SELECT c1, c2       -- QA
 		///     FROM A
 		///        ) B
-		///   FROM 
+		///   FROM
 		///      ) C
 		/// </code>
 		/// </summary>
@@ -1164,12 +1180,12 @@ namespace LinqToDB.SqlQuery
 							visitor.RemoveVisited(field);
 
 						return resultQuery;
-					} 
-				
+					}
+
 					if (element is SqlField f && f.Table != null && visitor.Context.correctedTables.TryGetValue(f.Table, out var levelQuery))
 					{
 						return NeedColumnForExpression(levelQuery, f, false)!;
-					} 
+					}
 
 					return element;
 				}, withStack: withStack);
@@ -1185,7 +1201,7 @@ namespace LinqToDB.SqlQuery
 		/// SELECT c1, c2
 		/// FROM A
 		/// -- after
-		/// SELECT B.c1, B.c2 
+		/// SELECT B.c1, B.c2
 		/// FROM (
 		///   SELECT c1, c2
 		///   FROM A
@@ -1276,7 +1292,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var newTableSource = new SqlTableSource(
 								tableSource.Source,
-								tableSource._alias,
+								tableSource.RawAlias,
 								joins,
 								tableSource.HasUniqueKeys ? tableSource.UniqueKeys : null);
 							return newTableSource;
@@ -1387,10 +1403,9 @@ namespace LinqToDB.SqlQuery
 				var brackets = open.Length / 2;
 				if (match.Index > lastMatchPosition)
 				{
-
+					var value = StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets));
 					current = new SqlBinaryExpression(typeof(string),
-						new SqlValue(typeof(string),
-							StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets))),
+						new SqlValue(typeof(string), value),
 						"+", current,
 						Precedence.Additive);
 				}
@@ -1402,9 +1417,9 @@ namespace LinqToDB.SqlQuery
 
 			if (result != null && lastMatchPosition < format.Length)
 			{
+				var value = StripDoubleQuotes(format.Substring(lastMatchPosition, format.Length - lastMatchPosition));
 				result = new SqlBinaryExpression(typeof(string),
-					result, "+", new SqlValue(typeof(string),
-						StripDoubleQuotes(format.Substring(lastMatchPosition, format.Length - lastMatchPosition))), Precedence.Additive);
+					result, "+", new SqlValue(typeof(string), value), Precedence.Additive);
 			}
 
 			result ??= new SqlValue(typeof(string), format);
@@ -1422,6 +1437,9 @@ namespace LinqToDB.SqlQuery
 
 			return false;
 		}
+
+		// TODO: IsAggregationOrWindowFunction use needs review - maybe we should call ContainsAggregationOrWindowFunction there
+		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr) => null != expr.Find(IsAggregationOrWindowFunction);
 
 		/// <summary>
 		/// Collects unique keys from different sources.
@@ -1544,7 +1562,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var newCondition = condition.Convert((sql, forTableSources), static (v, e) =>
 			{
-				if (   e is SqlColumn column && column.Parent != null && v.Context.forTableSources.Contains(column.Parent) 
+				if (   e is SqlColumn column && column.Parent != null && v.Context.forTableSources.Contains(column.Parent)
 				    || e is SqlField field   && field.Table   != null && v.Context.forTableSources.Contains(field.Table))
 				{
 					e = v.Context.sql.Select.AddColumn((ISqlExpression)e);
@@ -1611,7 +1629,7 @@ namespace LinqToDB.SqlQuery
 			return null != expression.Find(static e => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
 		}
 
-		private class NeedParameterInliningContext
+		private sealed class NeedParameterInliningContext
 		{
 			public bool HasParameter;
 			public bool IsQueryParameter;
@@ -1719,11 +1737,9 @@ namespace LinqToDB.SqlQuery
 			return new DbDataType(expr.SystemType!);
 		}
 
-		public static bool HasOuterReferences(SelectQuery root, ISqlExpression expr)
+		public static bool HasOuterReferences(ISet<ISqlTableSource> sources, ISqlExpression expr)
 		{
-			var sources = new HashSet<ISqlTableSource>(EnumerateAccessibleSources(root));
-
-			var outerElementFound = null != expr.Find(e =>
+			var outerElementFound = null != expr.Find(sources, static (sources, e) =>
 			{
 				if (e.ElementType == QueryElementType.Column)
 				{
@@ -1743,5 +1759,57 @@ namespace LinqToDB.SqlQuery
 
 			return outerElementFound;
 		}
+
+		public static SqlTable? GetUpdateTable(this SqlUpdateStatement updateStatement)
+		{
+			var tableToUpdate = updateStatement.Update.Table;
+
+			tableToUpdate ??= EnumerateAccessibleSources(updateStatement.SelectQuery)
+				.OfType<SqlTable>()
+				.FirstOrDefault();
+
+			return tableToUpdate;
+		}
+
+		public static SqlTable? GetDeleteTable(this SqlDeleteStatement deleteStatement)
+		{
+			var tableToDelete = deleteStatement.Table;
+
+			tableToDelete ??= EnumerateAccessibleSources(deleteStatement.SelectQuery)
+				.OfType<SqlTable>()
+				.FirstOrDefault();
+
+			return tableToDelete;
+		}
+
+		private static void RemoveNotUnusedColumnsInternal(SelectQuery selectQuery, SelectQuery parentQuery)
+		{
+			for (int i = 0; i < selectQuery.From.Tables.Count; i++)
+			{
+				var table = selectQuery.From.Tables[i];
+				if (table.Source is SelectQuery sc)
+				{
+					for (int c = 0; c < sc.Select.Columns.Count; )
+					{
+						var column = sc.Select.Columns[c];
+
+						if (IsDependsOn(selectQuery, column, new HashSet<IQueryElement> { table }))
+							c++;
+						else
+						{
+							sc.Select.Columns.RemoveAt(c);
+						}
+					}
+
+					RemoveNotUnusedColumnsInternal(sc, parentQuery);
+				}
+			}
+		}
+
+		public static void RemoveNotUnusedColumns(this SelectQuery selectQuery)
+		{
+			RemoveNotUnusedColumnsInternal(selectQuery, selectQuery);
+		}
+
 	}
 }

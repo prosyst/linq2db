@@ -6,7 +6,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider
 {
-	class AssemblyResolver
+	sealed class AssemblyResolver
 	{
 		readonly string?   _path;
 		readonly string    _resolveName;
@@ -16,9 +16,6 @@ namespace LinqToDB.DataProvider
 		{
 			_path        = path        ?? throw new ArgumentNullException(nameof(path));
 			_resolveName = resolveName ?? throw new ArgumentNullException(nameof(resolveName));
-
-			if (_path.StartsWith("file://"))
-				_path = _path.GetPathFromUri();
 
 			SetResolver();
 		}

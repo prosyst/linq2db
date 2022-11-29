@@ -112,7 +112,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany3([DataSources(TestProvName.AllAccess)] string context)
+		public void SelectMany3([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -127,7 +127,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany4([DataSources(TestProvName.AllAccess)] string context)
+		public void SelectMany4([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -264,7 +264,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow2([DataSources(ProviderName.SqlCe)] string context)
+		public void StackOverflow2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -273,7 +273,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow3([DataSources(ProviderName.SqlCe)] string context)
+		public void StackOverflow3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -282,7 +282,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow4([DataSources(ProviderName.SqlCe)] string context)
+		public void StackOverflow4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -451,7 +451,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest1([DataSources] string context)
+		public void LetTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -464,7 +464,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest2([DataSources] string context)
+		public void LetTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -486,7 +486,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullAssociation([DataSources] string context)
+		public void NullAssociation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -495,9 +495,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)] string context)
+		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q = db.Child
 					.Select(g => new
@@ -557,7 +557,7 @@ namespace Tests.Linq
 
 		[Table("Parent")]
 		[UsedImplicitly]
-		class Parent170
+		sealed class Parent170
 		{
 			[Column] public int ParentID;
 			[Column] public int Value1;
@@ -571,7 +571,7 @@ namespace Tests.Linq
 
 		[Table("Child")]
 		[UsedImplicitly]
-		class Child170
+		sealed class Child170
 		{
 			[Column] public int ParentID;
 			[Column] public int ChildID;
@@ -615,7 +615,7 @@ namespace Tests.Linq
 
 		[Table("Child")]
 		[UsedImplicitly]
-		class StorageTestClass
+		sealed class StorageTestClass
 		{
 			[Column] public int ParentID;
 			[Column] public int ChildID;
@@ -662,8 +662,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)]
-			string context)
+		public void TestGenericAssociationRuntime([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -734,7 +733,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe)] string context)
+		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -884,7 +883,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DistinctSelect([DataSources] string context)
+		public void DistinctSelect([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -905,7 +904,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ComplexQueryWithManyToMany([DataSources] string context)
+		public void ComplexQueryWithManyToMany([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -985,11 +984,7 @@ namespace Tests.Linq
 			public int  AssociatedObjectId { get; set; }
 			public int? AssociationTypeId  { get; set; }
 
-			[Association(
-				ThisKey      = nameof(AssociationTypeId),
-				OtherKey     = nameof(Lookup.Id),
-				CanBeNull    = true,
-				Relationship = Relationship.ManyToOne)]
+			[Association(ThisKey   = nameof(AssociationTypeId), OtherKey  = nameof(Lookup.Id), CanBeNull = true)]
 			public Lookup? AssociationTypeCode { get; set; }
 
 			public static Expression<Func<Resource, IDataContext, IQueryable<User>>> UserExpression =>
@@ -1016,7 +1011,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Employee
+		sealed class Employee
 		{
 			[Column] public int  Id           { get; set; }
 			[Column] public int? DepartmentId { get; set; }
@@ -1028,7 +1023,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Department
+		sealed class Department
 		{
 			[Column] public int     DepartmentId { get; set; }
 			[Column] public string? Name         { get; set; }
@@ -1038,7 +1033,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<Employee>())
 			using (db.CreateLocalTable<Department>())
 			{
@@ -1051,12 +1046,12 @@ namespace Tests.Linq
 			}
 		}
 
-		class Entity1711
-		{ 
+		sealed class Entity1711
+		{
 			public long Id { get; set; }
 		}
 
-		class Relationship1711
+		sealed class Relationship1711
 		{
 			public long EntityId { get; set; }
 
@@ -1064,7 +1059,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1711Test1([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder()
@@ -1084,7 +1079,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1711Test2([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder()
@@ -1105,7 +1100,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096Task
+		sealed class Issue1096Task
 		{
 			[Column]
 			public int Id { get; set; }
@@ -1121,7 +1116,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096TaskStage
+		sealed class Issue1096TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -1133,6 +1128,7 @@ namespace Tests.Linq
 			public bool Actual { get; set; }
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue1096Test([DataSources] string context)
 		{
@@ -1170,7 +1166,7 @@ namespace Tests.Linq
 			/// <summary>
 			/// Owner.
 			/// </summary>
-			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true, Relationship = Relationship.ManyToOne, IsBackReference = false)]
+			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true)]
 			public Issue2981OwnerEntity? Owner { get; set; }
 
 			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (T entity, Issue2981OwnerEntity owner) => entity.OwnerId == owner.Id;
@@ -1190,12 +1186,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Issue2981Entity>(new[]
 			{
-				new Issue2981Entity {OwnerId = 1}, 
+				new Issue2981Entity {OwnerId = 1},
 				new Issue2981Entity {OwnerId = 2}
 			});
 			using var t2 = db.CreateLocalTable<Issue2981OwnerEntity>(new[] {new Issue2981OwnerEntity {Id = 1}});
@@ -1257,6 +1253,154 @@ namespace Tests.Linq
 			}
 		}
 
+		#endregion
+
+		[ActiveIssue(2966)]
+		[Test(Description = "association over set query")]
+		public void Issue2966([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Patient.Concat(db.Patient).Select(r => new { r.Diagnosis, r.Person.FirstName }).ToArray();
+		}
+
+		#region issue 3557
+		[Table]
+		public class SubData2
+		{
+			[Column] public int     Id     { get; set; }
+			[Column] public string? Reason { get; set; }
+
+			public static readonly SubData2[] Records = new[]
+			{
+				new SubData2() { Id = 3, Reason = "прст1" },
+				new SubData2() { Id = 3, Reason = "прст2" },
+			};
+		}
+
+		[Table]
+		public class SubData1
+		{
+			[Column] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubData2.Id))]
+			public IEnumerable<SubData2> SubDatas { get; } = null!;
+
+			public static readonly SubData1[] Records = new[]
+			{
+				new SubData1() { Id = 2 },
+				new SubData1() { Id = 3 },
+			};
+		}
+
+		[Table]
+		public class Data
+		{
+			[Column] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubData1.Id), CanBeNull = true)]
+			public SubData1? SubData { get; }
+
+			public static readonly Data[] Records = new[]
+			{
+				new Data() { Id = 1 },
+				new Data() { Id = 2 },
+				new Data() { Id = 3 },
+			};
+		}
+
+		[Test]
+		public void Issue3557Case1([DataSources(
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData == null ? null : i.SubData.SubDatas.Select(s => s.Reason).FirstOrDefault(),
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.IsNull(null, result[0].Reason);
+			Assert.IsNull(null, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
+
+		[Test]
+		public void Issue3557Case2([DataSources(
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData!.SubDatas.Select(s => s.Reason).FirstOrDefault() ?? string.Empty,
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.AreEqual(string.Empty, result[0].Reason);
+			Assert.AreEqual(string.Empty, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
+
+		[Test]
+		public void Issue3557Case3([DataSources(
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var data = db.CreateLocalTable(Data.Records);
+			using var subData1 = db.CreateLocalTable(SubData1.Records);
+			using var subData2 = db.CreateLocalTable(SubData2.Records);
+
+			var result = data
+				.Select(
+				i => new
+				{
+					Id     = i.Id,
+					Reason = i.SubData!.SubDatas.Select(s => s.Reason).FirstOrDefault(),
+				})
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(1, result[0].Id);
+			Assert.AreEqual(2, result[1].Id);
+			Assert.AreEqual(3, result[2].Id);
+			Assert.IsNull(null, result[0].Reason);
+			Assert.IsNull(null, result[1].Reason);
+			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+		}
 		#endregion
 	}
 

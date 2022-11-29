@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -33,7 +35,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyOnce([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void CrossApplyOnce([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -62,11 +64,11 @@ namespace Tests.UserTests
 						.FirstOrDefault()
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+
+			ret.Should().HaveCount(2);
 		}
 
 		[Test]
-		[ActiveIssue(Details = "Please see issue 3161")]
 		public void CrossApplyTwice([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -111,6 +113,17 @@ namespace Tests.UserTests
 				})
 				.ToList();
 			Assert.That(ret.Count, Is.EqualTo(2));
+
+			// validate that the prior statement executed as a single query, not two distinct queries
+			var baselines = GetCurrentBaselines();
+			baselines.Should().Contain("SELECT", Exactly.Times(3));
+			baselines.Should().Contain("SELECT TOP", Exactly.Twice());
+
+			// LastQuery will only return a single query, so if it was split into two queries, not all name fields would be present
+			var lastQuery = ((DataConnection)db).LastQuery;
+			lastQuery.Should().Contain("NAME1", Exactly.Once());
+			lastQuery.Should().Contain("NAME2", Exactly.Once());
+			lastQuery.Should().Contain("NAME3", Exactly.Once());
 		}
 	}
 }

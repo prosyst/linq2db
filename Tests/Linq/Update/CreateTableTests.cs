@@ -14,7 +14,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class CreateTableTests : TestBase
 	{
-		class TestTable
+		sealed class TestTable
 		{
 			public int       ID;
 			public string?   Field1;
@@ -67,7 +67,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)] string context)
+		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus/*, ProviderName.DB2*/)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -82,17 +82,8 @@ namespace Tests.xUpdate
 				{
 					switch (context)
 					{
-						case ProviderName.SqlServer2008                       :
-						case ProviderName.SqlServer2012                       :
-						case ProviderName.SqlServer2014                       :
-						case ProviderName.SqlServer2016                       :
-						case ProviderName.SqlServer2017                       :
-						case TestProvName.SqlServer2019                       :
-						case TestProvName.SqlServer2019SequentialAccess       :
-						case TestProvName.SqlServer2019FastExpressionCompiler :
-						case TestProvName.SqlServerContained                  :
-						case TestProvName.SqlAzure                            : db.DropTable<TestTable>("#" + tableName); break;
-						default                                               : db.DropTable<TestTable>(tableName);       break;
+						case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus) : db.DropTable<TestTable>("#" + tableName); break;
+						default                                                             : db.DropTable<TestTable>(tableName);       break;
 					}
 				}
 				catch
@@ -103,16 +94,7 @@ namespace Tests.xUpdate
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2008                       :
-					case ProviderName.SqlServer2012                       :
-					case ProviderName.SqlServer2014                       :
-					case ProviderName.SqlServer2016                       :
-					case ProviderName.SqlServer2017                       :
-					case TestProvName.SqlServer2019                       :
-					case TestProvName.SqlServer2019SequentialAccess       :
-					case TestProvName.SqlServer2019FastExpressionCompiler :
-					case TestProvName.SqlServerContained                  :
-					case TestProvName.SqlAzure                            :
+					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus):
 						table = db.CreateTable<TestTable>("#" + tableName);
 						break;
 					case ProviderName.DB2                                 :
@@ -128,9 +110,11 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task CreateLocalTempTable1Async([IncludeDataSources(
 			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)]
 			string context)
 		{
@@ -147,17 +131,8 @@ namespace Tests.xUpdate
 				{
 					switch (context)
 					{
-						case ProviderName.SqlServer2008                       :
-						case ProviderName.SqlServer2012                       :
-						case ProviderName.SqlServer2014                       :
-						case ProviderName.SqlServer2016                       :
-						case ProviderName.SqlServer2017                       :
-						case TestProvName.SqlServer2019                       :
-						case TestProvName.SqlServer2019SequentialAccess       :
-						case TestProvName.SqlServer2019FastExpressionCompiler :
-						case TestProvName.SqlServerContained                  :
-						case TestProvName.SqlAzure                            : await db.DropTableAsync<TestTable>("#" + tableName); break;
-						default                                               : await db.DropTableAsync<TestTable>(tableName);       break;
+						case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus): await db.DropTableAsync<TestTable>("#" + tableName); break;
+						default                                                            : await db.DropTableAsync<TestTable>(tableName);       break;
 					}
 				}
 				catch
@@ -168,16 +143,7 @@ namespace Tests.xUpdate
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2008                                 :
-					case ProviderName.SqlServer2012                                 :
-					case ProviderName.SqlServer2014                                 :
-					case ProviderName.SqlServer2016                                 :
-					case ProviderName.SqlServer2017                                 :
-					case TestProvName.SqlServer2019                                 :
-					case TestProvName.SqlServer2019SequentialAccess                 :
-					case TestProvName.SqlServer2019FastExpressionCompiler           :
-					case TestProvName.SqlServerContained                            :
-					case TestProvName.SqlAzure                                      :
+					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus):
 						table = await db.CreateTableAsync<TestTable>("#" + tableName);
 						break;
 					case ProviderName.DB2                                           :
@@ -212,19 +178,21 @@ namespace Tests.xUpdate
 			Value2,
 		}
 
-		class TestEnumTable
+		sealed class TestEnumTable
 		{
 			public FieldType1 Field1;
 			[Column(DataType=DataType.Int32)]
 			public FieldType1? Field11;
 			public FieldType2? Field2;
+			[Column(DataType=DataType.VarChar, Configuration = ProviderName.ClickHouse)]
 			[Column(DataType=DataType.Char, Length=2)]
 			public FieldType2 Field21;
 			public FieldType3 Field3;
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
-		public void CreateTableWithEnum([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -253,22 +221,22 @@ namespace Tests.xUpdate
 			}
 		}
 
-		public enum jjj
+		public enum Jjj
 		{
 			aa,
 			bb,
 		}
 		public class base_aa
 		{
-			public jjj dd { get; set; }
+			public Jjj dd { get; set; }
 		}
-		public class aa : base_aa
+		public class Aa : base_aa
 		{
 			public int     bb { get; set; }
 			public string? cc { get; set; }
 		}
 
-		public class qq
+		public class Qq
 		{
 			public int     bb { get; set; }
 			public string? cc { get; set; }
@@ -280,13 +248,13 @@ namespace Tests.xUpdate
 			using (var conn = GetDataContext(context))
 			{
 				conn.MappingSchema.GetFluentMappingBuilder()
-					.Entity<aa>()
+					.Entity<Aa>()
 						.HasTableName("aa")
 						.Property(t => t.bb).IsPrimaryKey()
 						.Property(t => t.cc)
 						.Property(t => t.dd).IsNotColumn()
 
-					.Entity<qq>()
+					.Entity<Qq>()
 						.HasTableName("aa")
 						.Property(t => t.bb).IsPrimaryKey()
 						.Property(t => t.cc)
@@ -294,32 +262,32 @@ namespace Tests.xUpdate
 
 				try
 				{
-					conn.CreateTable<qq>();
+					conn.CreateTable<Qq>();
 				}
 				catch
 				{
-					conn.DropTable<qq>();
-					conn.CreateTable<qq>();
+					conn.DropTable<Qq>();
+					conn.CreateTable<Qq>();
 				}
 
-				conn.Insert(new aa
+				conn.Insert(new Aa
 				{
 					bb = 99,
 					cc = "hallo",
-					dd = jjj.aa
+					dd = Jjj.aa
 				});
 
-				var qq = conn.GetTable<aa>().ToList().First();
+				var qq = conn.GetTable<Aa>().ToList().First();
 
 				Assert.That(qq.bb, Is.EqualTo(99));
 				Assert.That(qq.cc, Is.EqualTo("hallo"));
 
-				conn.DropTable<qq>();
+				conn.DropTable<Qq>();
 			}
 		}
 
 		[Test]
-		public void CreateTable2([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void CreateTable2([IncludeDataSources(TestProvName.AllSqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -340,7 +308,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class TestCreateFormat
+		sealed class TestCreateFormat
 		{
 			[Column(CreateFormat = "{0}{1}{2}{3}/* test */"), NotNull]
 			public int Field1;
@@ -349,7 +317,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateFormatTest([IncludeDataSources(ProviderName.SqlServer2012)] string context)
+		public void CreateFormatTest([IncludeDataSources(TestProvName.AllSqlServer2012)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

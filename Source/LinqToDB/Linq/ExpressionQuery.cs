@@ -107,7 +107,7 @@ namespace LinqToDB.Linq
 				DataContext    dataContext    => dataContext.GetDataConnection(),
 				_                             => null
 			};
-		
+
 			if (dc == null)
 				return null;
 
@@ -115,12 +115,12 @@ namespace LinqToDB.Linq
 			//
 			if (TransactionScopeHelper.IsInsideTransactionScope)
 				return null;
-		
+
 			dc.EnsureConnection();
 
-			if (dc.TransactionAsync != null || dc.Command.Transaction != null)
+			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;
-		
+
 			return dc!.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
 		}
 
@@ -137,7 +137,7 @@ namespace LinqToDB.Linq
 				DataContext    dataContext    => dataContext.GetDataConnection(),
 				_                             => null
 			};
-		
+
 			if (dc == null)
 				return null;
 
@@ -145,12 +145,12 @@ namespace LinqToDB.Linq
 			//
 			if (TransactionScopeHelper.IsInsideTransactionScope)
 				return null;
-		
+
 			await dc.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			if (dc.TransactionAsync != null || dc.Command.Transaction != null)
+			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;
-		
+
 			return await dc!.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
@@ -295,7 +295,7 @@ namespace LinqToDB.Linq
 		object? IQueryProvider.Execute(Expression expression)
 		{
 			var query = GetQuery(ref expression, false, out _);
-			
+
 			using (StartLoadTransaction(query))
 			{
 				Preambles = query.InitPreambles(DataContext, expression, Parameters);

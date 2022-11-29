@@ -6,33 +6,20 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using System.Data.Common;
 	using Common;
 	using Configuration;
 	using Data;
 
-	public static class MySqlTools
+	public static partial class MySqlTools
 	{
-		private static readonly Lazy<IDataProvider> _mySqlDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new MySqlDataProvider(ProviderName.MySqlOfficial);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new MySqlDataProvider(ProviderName.MySqlConnector);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _mySqlDataProvider          = DataConnection.CreateDataProvider<MySqlDataProviderMySqlOfficial>();
+		static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = DataConnection.CreateDataProvider<MySqlDataProviderMySqlConnector>();
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (css.IsGlobal)
+			// ensure ClickHouse configuration over mysql protocol is not detected as mysql
+			if (css.IsGlobal || css.ProviderName?.Contains("ClickHouse") == true || css.Name.Contains("ClickHouse"))
 				return null;
 
 			switch (css.ProviderName)
@@ -74,7 +61,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				ProviderName.MySqlOfficial  => _mySqlDataProvider.Value,
 				ProviderName.MySqlConnector => _mySqlConnectorDataProvider.Value,
-				_                           => 
+				_                           =>
 					DetectedProviderName == ProviderName.MySqlOfficial
 					? _mySqlDataProvider.Value
 					: _mySqlConnectorDataProvider.Value,
@@ -126,12 +113,12 @@ namespace LinqToDB.DataProvider.MySql
 			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
@@ -141,23 +128,6 @@ namespace LinqToDB.DataProvider.MySql
 		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection               dataConnection,
-			IEnumerable<T>               source,
-			int                          maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
 
 		#endregion
 	}

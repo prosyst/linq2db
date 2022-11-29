@@ -4,7 +4,7 @@
 	using SqlProvider;
 	using SqlQuery;
 
-    public class DB2SqlOptimizer : BasicSqlOptimizer
+	sealed class DB2SqlOptimizer : BasicSqlOptimizer
 	{
 		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -27,8 +27,8 @@
 		}
 
 		public override bool CanCompareSearchConditions => true;
-		
-		protected static string[] DB2LikeCharactersToEscape = {"%", "_"};
+
+		private static string[] DB2LikeCharactersToEscape = {"%", "_"};
 
 		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
 
@@ -125,8 +125,8 @@
 
 					case "NChar"         :
 					case "NVarChar"      : return new SqlFunction(func.SystemType, "Char",      func.Parameters);
-						}
 				}
+			}
 
 			return expression;
 		}

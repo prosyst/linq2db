@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1591
+#pragma warning disable 1573, 1591
 #nullable enable
 
 using System;
@@ -33,12 +33,12 @@ namespace PostreSQL11DataContext
 		public ITable<_testsamename>                  _testsamename             { get { return this.GetTable<_testsamename>(); } }
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>                  CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<Doctor>                         Doctors                   { get { return this.GetTable<Doctor>(); } }
 		public ITable<Entity>                         Entities                  { get { return this.GetTable<Entity>(); } }
 		public ITable<GrandChild>                     GrandChildren             { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>               InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent>              InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<InventoryResource>              InventoryResources        { get { return this.GetTable<InventoryResource>(); } }
 		/// <summary>
 		/// This is the Issue2023 matview
 		/// </summary>
@@ -82,7 +82,14 @@ namespace PostreSQL11DataContext
 			InitMappingSchema();
 		}
 
-		public TestdbDB(LinqToDbConnectionOptions options)
+		public TestdbDB(LinqToDBConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestdbDB(LinqToDBConnectionOptions<TestdbDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -242,7 +249,7 @@ namespace PostreSQL11DataContext
 		[Column("uuidDataType",        DataType=LinqToDB.DataType.Guid),                                  Nullable            ] public Guid?                       UuidDataType        { get; set; } // uuid
 		[Column("bitDataType",         DataType=LinqToDB.DataType.BitArray,       Length=3),              Nullable            ] public BitArray?                   BitDataType         { get; set; } // bit(3)
 		[Column("booleanDataType",     DataType=LinqToDB.DataType.Boolean),                               Nullable            ] public bool?                       BooleanDataType     { get; set; } // boolean
-		[Column("colorDataType",       DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public object?                     ColorDataType       { get; set; } // USER-DEFINED
+		[Column("colorDataType",       DataType=LinqToDB.DataType.Enum),                                  Nullable            ] public string?                     ColorDataType       { get; set; } // color
 		[Column("pointDataType",       DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlPoint?                PointDataType       { get; set; } // point
 		[Column("lsegDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlLSeg?                 LsegDataType        { get; set; } // lseg
 		[Column("boxDataType",         DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlBox?                  BoxDataType         { get; set; } // box
@@ -275,6 +282,14 @@ namespace PostreSQL11DataContext
 		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), Nullable] public int? ChildID  { get; set; } // integer
 	}
 
+	[Table(Schema="public", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0), NotNull] public int    Id              { get; set; } // integer
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=20),             NotNull] public string CaseSensitive   { get; set; } = null!; // character varying(20)
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=20),             NotNull] public string CaseInsensitive { get; set; } = null!; // character varying(20)
+	}
+
 	[Table(Schema="public", Name="Doctor")]
 	public partial class Doctor
 	{
@@ -284,9 +299,9 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// Doctor_PersonID_fkey
+		/// Doctor_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="Doctor_PersonID_fkey", BackReferenceName="DoctorPersonIDfkey")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -321,13 +336,6 @@ namespace PostreSQL11DataContext
 		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0), PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0),    Nullable         ] public int?    TypeDiscriminator   { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50),                Nullable         ] public string? Name                { get; set; } // character varying(50)
-	}
-
-	[Table(Schema="public", Name="InventoryResource")]
-	public partial class InventoryResource
-	{
-		[Column(DataType=LinqToDB.DataType.Guid),     PrimaryKey, NotNull] public Guid   Id     { get; set; } // uuid
-		[Column(DataType=LinqToDB.DataType.NVarChar),             NotNull] public string Status { get; set; } = null!; // character varying
 	}
 
 	/// <summary>
@@ -378,9 +386,9 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// Patient_PersonID_fkey
+		/// Patient_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="Patient_PersonID_fkey", BackReferenceName="PatientPersonIDfkey")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -404,15 +412,15 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// Doctor_PersonID_fkey_BackReference
+		/// Doctor_PersonID_fkey_BackReference (public.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor? DoctorPersonIDfkey { get; set; }
 
 		/// <summary>
-		/// Patient_PersonID_fkey_BackReference
+		/// Patient_PersonID_fkey_BackReference (public.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? PatientPersonIDfkey { get; set; }
 
 		#endregion
@@ -426,15 +434,15 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// same_name_BackReference
+		/// same_name_BackReference (public.same_name2)
 		/// </summary>
-		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
 		public IEnumerable<SameName2> SameNameBackReferences { get; set; } = null!;
 
 		/// <summary>
-		/// same_name_BackReference
+		/// same_name_BackReference (public.same_name1)
 		/// </summary>
-		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
 		public IEnumerable<SameName1> Samenames { get; set; } = null!;
 
 		#endregion
@@ -449,9 +457,9 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// same_name
+		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="same_name", BackReferenceName="Samenames")]
+		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion
@@ -466,9 +474,9 @@ namespace PostreSQL11DataContext
 		#region Associations
 
 		/// <summary>
-		/// same_name
+		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="same_name", BackReferenceName="SameNameBackReferences")]
+		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion
@@ -586,7 +594,7 @@ namespace PostreSQL11DataContext
 	{
 		#region AddIfNotExists
 
-		[Sql.Function(Name="public.add_if_not_exists", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".add_if_not_exists", ServerSideOnly=true)]
 		public static object? AddIfNotExists(string? p_name)
 		{
 			throw new InvalidOperationException();
@@ -596,7 +604,7 @@ namespace PostreSQL11DataContext
 
 		#region Addissue792record
 
-		[Sql.Function(Name="public.addissue792record", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".addissue792record", ServerSideOnly=true)]
 		public static object? Addissue792record()
 		{
 			throw new InvalidOperationException();
@@ -606,7 +614,7 @@ namespace PostreSQL11DataContext
 
 		#region Bool
 
-		[Sql.Function(Name="public.bool", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".bool", ServerSideOnly=true)]
 		public static string? Bool(int? param)
 		{
 			throw new InvalidOperationException();
@@ -626,7 +634,7 @@ namespace PostreSQL11DataContext
 
 		#region Issue1742Date
 
-		[Sql.Function(Name="public.issue_1742_date", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".issue_1742_date", ServerSideOnly=true)]
 		public static int? Issue1742Date(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -636,7 +644,7 @@ namespace PostreSQL11DataContext
 
 		#region Issue1742Ts
 
-		[Sql.Function(Name="public.issue_1742_ts", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".issue_1742_ts", ServerSideOnly=true)]
 		public static int? Issue1742Ts(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -646,7 +654,7 @@ namespace PostreSQL11DataContext
 
 		#region Issue1742Tstz
 
-		[Sql.Function(Name="public.issue_1742_tstz", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".issue_1742_tstz", ServerSideOnly=true)]
 		public static int? Issue1742Tstz(DateTimeOffset? p1)
 		{
 			throw new InvalidOperationException();
@@ -656,7 +664,7 @@ namespace PostreSQL11DataContext
 
 		#region Reverse
 
-		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".reverse", ServerSideOnly=true)]
 		public static string? Reverse(string? par7)
 		{
 			throw new InvalidOperationException();
@@ -666,7 +674,7 @@ namespace PostreSQL11DataContext
 
 		#region TestAvg
 
-		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		[Sql.Function(Name="\"public\".test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
 		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
 		{
 			throw new InvalidOperationException();
@@ -676,7 +684,7 @@ namespace PostreSQL11DataContext
 
 		#region TestFunctionParameters
 
-		[Sql.Function(Name="public.\"TestFunctionParameters\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".\"TestFunctionParameters\"", ServerSideOnly=true)]
 		public static TestFunctionParametersResult? TestFunctionParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
@@ -686,7 +694,7 @@ namespace PostreSQL11DataContext
 
 		#region TestScalarFunction
 
-		[Sql.Function(Name="public.\"TestScalarFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".\"TestScalarFunction\"", ServerSideOnly=true)]
 		public static string? TestScalarFunction(int? param)
 		{
 			throw new InvalidOperationException();
@@ -696,7 +704,7 @@ namespace PostreSQL11DataContext
 
 		#region TestSingleOutParameterFunction
 
-		[Sql.Function(Name="public.\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="\"public\".\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
 		public static int? TestSingleOutParameterFunction(int? param1)
 		{
 			throw new InvalidOperationException();
@@ -735,12 +743,6 @@ namespace PostreSQL11DataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
-		}
-
-		public static InventoryResource? Find(this ITable<InventoryResource> table, Guid Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int PersonID)
@@ -834,5 +836,3 @@ namespace PostreSQL11DataContext
 		}
 	}
 }
-
-#pragma warning restore 1591

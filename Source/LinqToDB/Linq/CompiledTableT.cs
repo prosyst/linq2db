@@ -7,7 +7,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common.Internal.Cache;
 
-	class CompiledTable<T>
+	sealed class CompiledTable<T>
 		where T : notnull
 	{
 		public CompiledTable(LambdaExpression lambda, Expression expression)
@@ -26,7 +26,7 @@ namespace LinqToDB.Linq
 			var mappingSchemaID = dataContext.MappingSchema.ConfigurationID;
 
 			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
-				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression),
+				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression, dataContext.GetQueryFlags()),
 				(dataContext, lambda: _lambda),
 				static (o, key, ctx) =>
 				{

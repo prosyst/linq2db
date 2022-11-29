@@ -14,7 +14,7 @@ namespace System.Data.Linq
 		private byte[] _bytes;
 		private int?   _hashCode;
 
-		public Binary(byte[] value)
+		public Binary(byte[]? value)
 		{
 			if(value == null)
 			{
@@ -37,13 +37,13 @@ namespace System.Data.Linq
 
 		public int Length => _bytes.Length;
 
-		public static implicit operator Binary(byte[] value) => new Binary(value);
+		public static implicit operator Binary(byte[]? value) => new Binary(value);
 
 		public bool Equals(Binary? other) => EqualsTo(other);
 
 		public static bool operator ==(Binary? binary1, Binary? binary2)
 		{
-			if (binary1 is null && binary1 is null)
+			if (binary1 is null && binary2 is null)
 				return true;
 			if (binary1 is null || binary2 is null)
 				return false;
@@ -55,7 +55,7 @@ namespace System.Data.Linq
 
 		public static bool operator !=(Binary? binary1, Binary? binary2)
 		{
-			if (binary1 is null && binary1 is null)
+			if (binary1 is null && binary2 is null)
 				return false;
 			if (binary1 is null || binary2 is null)
 				return true;
@@ -107,7 +107,7 @@ namespace System.Data.Linq
 		}
 
 		/// <summary>
-		/// Simple hash using pseudo-random coefficients for each byte in 
+		/// Simple hash using pseudo-random coefficients for each byte in
 		/// the array to achieve order dependency.
 		/// </summary>
 		private void ComputeHash()

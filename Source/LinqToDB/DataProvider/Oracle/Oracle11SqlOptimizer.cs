@@ -3,6 +3,7 @@
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Extensions;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -12,11 +13,11 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			CheckAliases(statement, 30);
 
-			return base.Finalize(statement);
+			return base.Finalize(mappingSchema, statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -158,7 +159,11 @@ namespace LinqToDB.DataProvider.Oracle
 								return ex;
 						}
 
-						if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset))
+						if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
+#if NET6_0_OR_GREATER
+							|| ftype == typeof(DateOnly)
+#endif
+							)
 						{
 							if (IsTimeDataType(func.Parameters[0]))
 							{
@@ -188,6 +193,25 @@ namespace LinqToDB.DataProvider.Oracle
 
 							return new SqlFunction(func.SystemType, "TO_TIMESTAMP", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 						}
+						else if (ftype == typeof(string))
+						{
+							var stype = func.Parameters[1].SystemType!.ToUnderlying();
+
+							if (stype == typeof(DateTimeOffset))
+							{
+								return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
+							}
+							else if (stype == typeof(DateTime))
+							{
+								return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+							}
+#if NET6_0_OR_GREATER
+							else if (stype == typeof(DateOnly))
+							{
+								return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("YYYY-MM-DD"));
+							}
+#endif
+						}
 
 						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 					}
@@ -196,7 +220,7 @@ namespace LinqToDB.DataProvider.Oracle
 						return func.Parameters.Length == 2?
 							new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0]):
 							new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0], func.Parameters[2]);
-					case "Avg"            : 
+					case "Avg"            :
 						return new SqlFunction(
 							func.SystemType,
 							"Round",

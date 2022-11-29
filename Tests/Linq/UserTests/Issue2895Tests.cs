@@ -143,8 +143,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(Details = "Please see issue 2895")]
-		public void EagerLoadingTest([DataSources] string context)
+		public void EagerLoadingTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InternalEmail>(new[] { new InternalEmail { Id = 10, UserId = 1, RequestId = 1 } }))

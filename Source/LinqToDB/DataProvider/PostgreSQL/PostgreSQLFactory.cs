@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Configuration;
 
 	[UsedImplicitly]
-	public class PostgreSQLFactory: IDataProviderFactory
+	sealed class PostgreSQLFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

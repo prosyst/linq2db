@@ -1,32 +1,23 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
-	using LinqToDB.SqlQuery;
+	using Common;
+	using Data;
 	using Mapping;
-	using System.Data.Linq;
-	using System.Globalization;
+	using SqlQuery;
 
-	public class PostgreSQLMappingSchema : MappingSchema
+	sealed class PostgreSQLMappingSchema : LockedMappingSchema
 	{
 		private const string DATE_FORMAT       = "'{0:yyyy-MM-dd}'::{1}";
 		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
 		private const string TIMESTAMP3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
 
-		public PostgreSQLMappingSchema() : this(ProviderName.PostgreSQL)
-		{
-		}
-
-		public PostgreSQLMappingSchema(params MappingSchema[] schemas) : this(ProviderName.PostgreSQL, schemas)
-		{
-		}
-
-		protected PostgreSQLMappingSchema(string configuration, params MappingSchema[] schemas)
-			: base(configuration, schemas)
+		PostgreSQLMappingSchema() : base(ProviderName.PostgreSQL)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -37,6 +28,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.AppendFormat("'{0:D}'::uuid", (Guid)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
 
 			// adds floating point special values support
@@ -59,7 +51,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			AddScalarType(typeof(string),    DataType.Text);
 			AddScalarType(typeof(TimeSpan),  DataType.Interval);
-			AddScalarType(typeof(TimeSpan?), DataType.Interval);
+
+#if NET6_0_OR_GREATER
+			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, v) => BuildDate(sb, dt, (DateOnly)v));
+#endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
 			SetConvertExpression<ushort , DataParameter>(value => new DataParameter(null, (int  )value, DataType.Int32));
@@ -67,10 +62,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetConvertExpression<uint   , DataParameter>(value => new DataParameter(null, (long )value, DataType.Int64));
 			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, (long?)value, DataType.Int64), addNullCheck: false);
 
-			var ulongType = new SqlDataType(DataType.Decimal, typeof(decimal), 20, 0);
+			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
 			AddScalarType(typeof(ulong ), ulongType);
-			AddScalarType(typeof(ulong?), ulongType);
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 			SetConvertExpression<ulong?, DataParameter>(value => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/, addNullCheck: false);
@@ -103,13 +97,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
+#if NET6_0_OR_GREATER
+		static void BuildDate(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");
+		}
+#endif
+
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
 			stringBuilder.Append("E'\\\\x");
 
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append('\'');
+			stringBuilder.Append("'::bytea");
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
@@ -133,44 +134,33 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
-	}
 
-	public class PostgreSQL92MappingSchema : MappingSchema
-	{
-		public PostgreSQL92MappingSchema()
-			: base(ProviderName.PostgreSQL92, PostgreSQLMappingSchema.Instance)
+		public sealed class PostgreSQL92MappingSchema : LockedMappingSchema
 		{
+			public PostgreSQL92MappingSchema() : base(ProviderName.PostgreSQL92, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
 		}
 
-		public PostgreSQL92MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		public sealed class PostgreSQL93MappingSchema : LockedMappingSchema
 		{
-		}
-	}
-
-	public class PostgreSQL93MappingSchema : MappingSchema
-	{
-		public PostgreSQL93MappingSchema()
-			: base(ProviderName.PostgreSQL93, PostgreSQLMappingSchema.Instance)
-		{
+			public PostgreSQL93MappingSchema() : base(ProviderName.PostgreSQL93, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
 		}
 
-		public PostgreSQL93MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL93, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		public sealed class PostgreSQL95MappingSchema : LockedMappingSchema
 		{
-		}
-	}
-
-	public class PostgreSQL95MappingSchema : MappingSchema
-	{
-		public PostgreSQL95MappingSchema()
-			: base(ProviderName.PostgreSQL95, PostgreSQLMappingSchema.Instance)
-		{
+			public PostgreSQL95MappingSchema() : base(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
 		}
 
-		public PostgreSQL95MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL95, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		public sealed class PostgreSQL15MappingSchema : LockedMappingSchema
 		{
+			public PostgreSQL15MappingSchema() : base(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
 		}
 	}
 }

@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class CountBuilder : MethodCallBuilder
+	sealed class CountBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "Count"     , "LongCount"      };
 		private static readonly string[] MethodNamesAsync = { "CountAsync", "LongCountAsync" };
@@ -92,13 +92,7 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
-		internal class CountContext : SequenceContextBase
+		internal sealed class CountContext : SequenceContextBase
 		{
 			public CountContext(IBuildContext? parent, IBuildContext sequence, Type returnType)
 				: base(parent, sequence, null)

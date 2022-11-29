@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 		#region Init
 
 #if DEBUG
-		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+		public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
 		public string Path => this.GetPath();
 		public MethodCallExpression? Debug_MethodCall;
 #endif
@@ -459,7 +459,10 @@ namespace LinqToDB.Linq.Builder
 						newInfo[i] = si;
 					else
 					{
-						var index = SelectQuery.Select.Add(si.Query!.Select.Columns[si.Index]);
+						var index = SelectQuery.Select.Add(
+							si.Query != null
+								? si.Query.Select.Columns[si.Index]
+								: si.Sql);
 
 						newInfo[i] = new SqlInfo(si.MemberChain, SelectQuery.Select.Columns[index], SelectQuery, index);
 					}
@@ -475,7 +478,7 @@ namespace LinqToDB.Linq.Builder
 
 		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new ();
 
-		class SqlData
+		sealed class SqlData
 		{
 			public SqlInfo[]  Sql    = null!;
 			public MemberInfo Member = null!;
@@ -990,7 +993,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void SetAlias(string? alias)
 		{
-			if (!alias.IsNullOrEmpty() && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
+			if (!string.IsNullOrEmpty(alias) && !alias!.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
 			{
 				SelectQuery.Select.From.Tables[0].Alias = alias;
 			}

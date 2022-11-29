@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-	internal class CacheEntry<TKey> : ICacheEntry<TKey>
+	internal sealed class CacheEntry<TKey> : ICacheEntry<TKey>
 		where TKey: notnull
 	{
 		private bool                                           _disposed;
@@ -113,10 +113,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			get
 			{
-				if (_expirationTokens == null)
-				{
-					_expirationTokens = new List<IChangeToken>();
-				}
+				_expirationTokens ??= new List<IChangeToken>();
 
 				return _expirationTokens;
 			}
@@ -129,10 +126,7 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			get
 			{
-				if (_postEvictionCallbacks == null)
-				{
-					_postEvictionCallbacks = new List<PostEvictionCallbackRegistration<TKey>>();
-				}
+				_postEvictionCallbacks ??= new List<PostEvictionCallbackRegistration<TKey>>();
 
 				return _postEvictionCallbacks;
 			}
@@ -210,7 +204,9 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				EvictionReason = reason;
 			}
+
 			_isExpired = true;
+
 			DetachTokens();
 		}
 
@@ -222,8 +218,7 @@ namespace LinqToDB.Common.Internal.Cache
 				return true;
 			}
 
-			if (_slidingExpiration.HasValue
-				&& (now - LastAccessed) >= _slidingExpiration)
+			if (_slidingExpiration.HasValue && (now - LastAccessed) >= _slidingExpiration)
 			{
 				SetExpired(EvictionReason.Expired);
 				return true;
@@ -236,9 +231,10 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			if (_expirationTokens != null)
 			{
-				for (int i = 0; i < _expirationTokens.Count; i++)
+				for (var i = 0; i < _expirationTokens.Count; i++)
 				{
 					var expiredToken = _expirationTokens[i];
+
 					if (expiredToken.HasChanged)
 					{
 						SetExpired(EvictionReason.TokenExpired);
@@ -255,16 +251,16 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				lock (_lock)
 				{
-					for (int i = 0; i < _expirationTokens.Count; i++)
+					for (var i = 0; i < _expirationTokens.Count; i++)
 					{
 						var expirationToken = _expirationTokens[i];
+
 						if (expirationToken.ActiveChangeCallbacks)
 						{
-							if (_expirationTokenRegistrations == null)
-							{
-								_expirationTokenRegistrations = new List<IDisposable>(1);
-							}
+							_expirationTokenRegistrations ??= new List<IDisposable>(1);
+
 							var registration = expirationToken.RegisterChangeCallback(ExpirationCallback, this);
+
 							_expirationTokenRegistrations.Add(registration);
 						}
 					}

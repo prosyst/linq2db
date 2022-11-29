@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Common;
 
-	class LoadWithBuilder : MethodCallBuilder
+	sealed class LoadWithBuilder : MethodCallBuilder
 	{
 		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
 
@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 			var propType = expectedType;
 			if (EagerLoading.IsEnumerableType(expectedType, mappingSchema))
 				propType = EagerLoading.GetEnumerableElementType(expectedType, mappingSchema);
-			var itemType = typeof(Expression<>).IsSameOrParentOf(filterType) ? 
+			var itemType = typeof(Expression<>).IsSameOrParentOf(filterType) ?
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0];
 			if (propType != itemType)
@@ -80,8 +80,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				if (table.LoadWith == null)
-					table.LoadWith = new List<LoadWithInfo[]>();
+				table.LoadWith ??= new List<LoadWithInfo[]>();
 
 				if (methodCall.Arguments.Count == 3)
 				{
@@ -212,7 +211,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (lastMember == null)
 								goto default;
-							
+
 							var expr  = cexpr.Object;
 
 							if (expr == null)
@@ -288,13 +287,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
-		internal class LoadWithContext : PassThroughContext
+		internal sealed class LoadWithContext : PassThroughContext
 		{
 			private readonly TableBuilder.TableContext _tableContext;
 

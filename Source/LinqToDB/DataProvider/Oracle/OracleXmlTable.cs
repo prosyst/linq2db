@@ -8,13 +8,13 @@ using System.Text;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Expressions;
-	using LinqToDB.SqlProvider;
+	using SqlProvider;
 	using Mapping;
 	using SqlQuery;
 
 	public static partial class OracleTools
 	{
-		class OracleXmlTableAttribute : Sql.TableExpressionAttribute
+		sealed class OracleXmlTableAttribute : Sql.TableExpressionAttribute
 		{
 			public OracleXmlTableAttribute()
 				: base("")
@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.Oracle
 					var conv = mappingSchema.ValueToSqlConverter;
 					converters[i] = (sb, obj) =>
 					{
-						var value = c.GetValue(obj);
+						var value = c.GetProviderValue(obj);
 
 						if (value is string && c.MemberType == typeof(string))
 						{
@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Oracle
 						string.IsNullOrEmpty(c.DbType)
 							? GetDataTypeText(
 								new SqlDataType(
-									c.DataType == DataType.Undefined ? SqlDataType.GetDataType(c.MemberType).Type.DataType : c.DataType,
+									c.DataType == DataType.Undefined ? mappingSchema.GetDataType(c.MemberType).Type.DataType : c.DataType,
 									c.MemberType,
 									c.Length,
 									c.Precision,
@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 
 				table.SqlTableType   = SqlTableType.Expression;
-				table.Name           = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns}) {{1}}";
+				table.Expression     = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns}) {{1}}";
 				table.TableArguments = new[] { arg };
 			}
 		}

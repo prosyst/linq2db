@@ -2,13 +2,6 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
-using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-using LinqToDB.SqlQuery;
 
 #if NET6_0_OR_GREATER
 [assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Linq.Builder.ParametersContext))]
@@ -16,7 +9,15 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class ParametersContext
+	using Common;
+	using Data;
+	using LinqToDB.Expressions;
+	using Extensions;
+	using Mapping;
+	using Reflection;
+	using SqlQuery;
+
+	sealed class ParametersContext
 	{
 		public ParametersContext(Expression parametersExpression, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
 		{
@@ -32,7 +33,12 @@ namespace LinqToDB.Linq.Builder
 		public IDataContext                      DataContext          { get; }
 		public MappingSchema                     MappingSchema        => DataContext.MappingSchema;
 
-		private static ParameterExpression[] AccessorParameters = { ExpressionBuilder.ExpressionParam, ExpressionBuilder.DataContextParam, ExpressionBuilder.ParametersParam };
+		static ParameterExpression[] AccessorParameters =
+		{
+			ExpressionBuilder.ExpressionParam,
+			ExpressionBuilder.DataContextParam,
+			ExpressionBuilder.ParametersParam
+		};
 
 		public readonly   List<ParameterAccessor>           CurrentSqlParameters = new ();
 		internal readonly Dictionary<Expression,Expression> _expressionAccessors;
@@ -303,7 +309,7 @@ namespace LinqToDB.Linq.Builder
 			return p;
 		}
 
-		public class ValueTypeExpression
+		public sealed class ValueTypeExpression
 		{
 			public Expression ValueExpression      = null!;
 			public Expression DbDataTypeExpression = null!;
@@ -390,12 +396,12 @@ namespace LinqToDB.Linq.Builder
 			if (name == null && expression.Type == typeof(DataParameter))
 			{
 				var dp = expression.EvaluateExpression<DataParameter>();
-				if (dp?.Name?.IsNullOrEmpty() == false)
+				if (dp != null && !string.IsNullOrEmpty(dp.Name))
 					name = dp.Name;
 			}
 
 			// see #820
-			accessorExpression         = CorrectAccessorExpression(accessorExpression, dataContext, ExpressionBuilder.DataContextParam);
+			accessorExpression         = CorrectAccessorExpression(accessorExpression,         dataContext, ExpressionBuilder.DataContextParam);
 			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, ExpressionBuilder.DataContextParam);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
@@ -435,7 +441,7 @@ namespace LinqToDB.Linq.Builder
 				;
 		}
 
-	
+
 		static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext, ParameterExpression dataContextParam)
 		{
 			// see #820

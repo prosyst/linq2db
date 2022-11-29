@@ -12,7 +12,7 @@ namespace LinqToDB.Linq
 	using Async;
 #endif
 
-	class PersistentTable<T> : ITable<T>
+	sealed class PersistentTable<T> : ITable<T>
 		where T : notnull
 	{
 		private readonly IQueryable<T> _query;
@@ -81,10 +81,6 @@ namespace LinqToDB.Linq
 		public string       TableName    { get; } = null!;
 		public string?      ServerName   { get; }
 		public TableOptions TableOptions { get; }
-
-		public string GetTableName()
-		{
-			return null!;
-		}
+		public string?      TableID      { get; }
 	}
 }

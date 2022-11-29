@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +11,7 @@ namespace LinqToDB.DataProvider.Sybase
 	// !table.TableOptions.HasIsTemporary() check:
 	// native bulk copy produce following error for insert into temp table:
 	// AseException : Incorrect syntax near ','.
-	class SybaseBulkCopy : BasicBulkCopy
+	sealed class SybaseBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Setting is conservative based on https://maxdb.sap.com/doc/7_6/f6/069940ccd42a54e10000000a1550b0/content.htm
@@ -96,14 +95,15 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				// for run in transaction see
 				// https://stackoverflow.com/questions/57675379
 				// provider will call sp_oledb_columns which creates temp table
 				var transaction = dataConnection.Transaction;
+
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(dataConnection, transaction);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -115,6 +115,7 @@ namespace LinqToDB.DataProvider.Sybase
 					};
 				}
 			}
+
 			return default;
 		}
 

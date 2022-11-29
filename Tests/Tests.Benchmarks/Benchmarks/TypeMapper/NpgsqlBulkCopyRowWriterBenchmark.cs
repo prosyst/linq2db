@@ -30,9 +30,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 		private Action<MappingSchema, Wrapped.NpgsqlBinaryImporter, ColumnDescriptor[], TestEntity> _rowWriter = null!;
 
-		class Original
+		sealed class Original
 		{
-			public class NpgsqlBinaryImporter
+			public sealed class NpgsqlBinaryImporter
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)]
 				public void StartRow()
@@ -49,10 +49,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			}
 		}
 
-		class Wrapped
+		sealed class Wrapped
 		{
 			[Wrapper]
-			public class NpgsqlBinaryImporter : TypeWrapper
+			public sealed class NpgsqlBinaryImporter : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -131,7 +131,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			importer.StartRow();
 
 			for (var i = 0; i < _columns.Length; i++)
-				importer.Write(_columns[i].GetValue(TestEntity.Instance), Original.NpgsqlDbType.Test);
+				importer.Write(_columns[i].GetProviderValue(TestEntity.Instance), Original.NpgsqlDbType.Test);
 		}
 	}
 }

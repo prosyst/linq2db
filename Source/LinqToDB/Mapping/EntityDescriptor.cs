@@ -2,21 +2,22 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Expressions;
 	using Extensions;
 	using Linq;
-	using LinqToDB.Expressions;
+	using LinqToDB.SqlQuery;
 	using Reflection;
-	using System.Linq.Expressions;
-	using System.Reflection;
 
 	/// <summary>
 	/// Stores mapping entity descriptor.
 	/// </summary>
-	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{TableName}\")")]
+	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{TableName.Name}\")")]
 	public class EntityDescriptor : IEntityChangeDescriptor
 	{
 		/// <summary>
@@ -28,8 +29,8 @@ namespace LinqToDB.Mapping
 		{
 			MappingSchema = mappingSchema;
 			TypeAccessor  = TypeAccessor.GetAccessor(type);
-			Associations  = new List<AssociationDescriptor>();
-			Columns       = new List<ColumnDescriptor>();
+			Associations  = new ();
+			Columns       = new ();
 
 			Init();
 			InitInheritanceMapping();
@@ -45,45 +46,30 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets name of table or view in database.
 		/// </summary>
-		public string TableName { get; private set; } = null!;
+		public SqlObjectName Name { get; private set; }
 
 		string IEntityChangeDescriptor.TableName
 		{
-			get => TableName;
-			set => TableName = value;
+			get => Name.Name;
+			set => Name = Name with { Name = value };
 		}
-
-		/// <summary>
-		/// Gets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
-		/// </summary>
-		public string? SchemaName { get; private set; }
 
 		string? IEntityChangeDescriptor.SchemaName
 		{
-			get => SchemaName;
-			set => SchemaName = value;
+			get => Name.Schema;
+			set => Name = Name with { Schema = value };
 		}
-
-		/// <summary>
-		/// Gets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
-		/// </summary>
-		public string? DatabaseName { get; private set; }
 
 		string? IEntityChangeDescriptor.DatabaseName
 		{
-			get => DatabaseName;
-			set => DatabaseName = value;
+			get => Name.Database;
+			set => Name = Name with { Database = value };
 		}
-
-		/// <summary>
-		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
-		/// </summary>
-		public string? ServerName { get; private set; }
 
 		string? IEntityChangeDescriptor.ServerName
 		{
-			get => ServerName;
-			set => ServerName = value;
+			get => Name.Server;
+			set => Name = Name with { Server = value };
 		}
 
 		/// <summary>
@@ -162,7 +148,6 @@ namespace LinqToDB.Mapping
 
 		public Delegate? QueryFilterFunc { get; private set; }
 
-
 		bool HasInheritanceMapping()
 		{
 			var currentType = TypeAccessor.Type.BaseType;
@@ -185,13 +170,16 @@ namespace LinqToDB.Mapping
 			var ta = MappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
 
 			string? tableName = null;
+			string? schema    = null;
+			string? database  = null;
+			string? server    = null;
 
 			if (ta != null)
 			{
-				tableName                 = ta.Name!;
-				SchemaName                = ta.Schema;
-				DatabaseName              = ta.Database;
-				ServerName                = ta.Server;
+				tableName                 = ta.Name;
+				schema                    = ta.Schema;
+				database                  = ta.Database;
+				server                    = ta.Server;
 				TableOptions              = ta.TableOptions;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
@@ -204,7 +192,7 @@ namespace LinqToDB.Mapping
 					tableName = tableName.Substring(1);
 			}
 
-			TableName = tableName;
+			Name = new SqlObjectName(tableName, Server: server, Database: database, Schema: schema);
 
 			var qf = MappingSchema.GetAttribute<QueryFilterAttribute>(TypeAccessor.Type);
 
@@ -268,8 +256,7 @@ namespace LinqToDB.Mapping
 
 				if (caa != null)
 				{
-					if (Aliases == null)
-						Aliases = new Dictionary<string, string?>();
+					Aliases ??= new Dictionary<string, string?>();
 
 					Aliases.Add(member.Name, caa.MemberName);
 				}
@@ -277,8 +264,7 @@ namespace LinqToDB.Mapping
 				var ma = MappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
 				if (ma != null && ma.IsColumn)
 				{
-					if (CalculatedMembers == null)
-						CalculatedMembers = new List<MemberAccessor>();
+					CalculatedMembers ??= new List<MemberAccessor>();
 					CalculatedMembers.Add(member);
 				}
 			}
@@ -388,8 +374,7 @@ namespace LinqToDB.Mapping
 					throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
 
 				foreach (var mapping in result)
-					if (mapping.Discriminator == null)
-						mapping.Discriminator = discriminator;
+					mapping.Discriminator ??= discriminator;
 			}
 
 			_inheritanceMappings = result;

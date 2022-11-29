@@ -18,7 +18,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void GeneralTest([DataSources] string context)
+		public void GeneralTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		[Test]
 		public void SpecificTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool avoidProviderSpecificApi)
 		{
-			var provider = new PostgreSQLDataProvider(PostgreSQLVersion.v95);
+			var provider = PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95);
 			var cs       = DataConnection.GetConnectionString(context);
 
 			using (var cn = new NpgsqlConnection(cs))

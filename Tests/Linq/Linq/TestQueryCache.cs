@@ -18,7 +18,7 @@ namespace Tests.Linq
 	public class TestQueryCache : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			public int Id         { get; set; }
 			public string? StrKey { get; set; }
@@ -26,7 +26,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClassWithIdentity
+		sealed class SampleClassWithIdentity
 		{
 			[Identity]
 			public int Id         { get; set; }
@@ -34,7 +34,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class ManyFields
+		sealed class ManyFields
 		{
 			[PrimaryKey]
 			public int  Id     { get; set; }
@@ -120,7 +120,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		public void TestSchema([IncludeDataSources(ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
 			void TestMethod(string columnName, string? schemaName = null)
 			{
@@ -138,7 +138,8 @@ namespace Tests.Linq
 			TestMethod("Value2");
 
 			TestMethod("ValueF1", "FAIL");
-			Assert.Throws(Is.AssignableTo(typeof(Exception)), () => TestMethod("ValueF2", "FAIL"));
+			// Fluent mapping makes schema unique.
+			TestMethod("ValueF2", "FAIL");
 		}
 
 		private static MappingSchema CreateMappingSchema(string columnName, string? schemaName = null)
@@ -148,7 +149,7 @@ namespace Tests.Linq
 
 			builder.Entity<SampleClass>()
 				.Property(e => e.Id).IsPrimaryKey()
-				.Property(e => e.StrKey).IsPrimaryKey().HasColumnName("Key" + columnName).HasLength(50)
+				.Property(e => e.StrKey).IsNullable(false).IsPrimaryKey().HasColumnName("Key" + columnName).HasLength(50)
 				.Property(e => e.Value).HasColumnName(columnName).HasLength(50);
 
 			builder.Entity<SampleClassWithIdentity>()
@@ -159,7 +160,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ManyFields>())

@@ -1,14 +1,71 @@
 ﻿using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Data.DbCommandProcessor;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using System;
+using System.Globalization;
+using System.Threading;
 using Tests.Model;
 
 namespace Tests
 {
+	public class RestoreBaseTables : IDisposable
+	{
+		private readonly IDataContext _db;
+
+		public RestoreBaseTables(IDataContext db)
+		{
+			_db = db;
+		}
+
+		void IDisposable.Dispose()
+		{
+			using var _ = new DisableBaseline("isn't baseline query");
+
+			_db.GetTable<Parent>().Delete(p => p.ParentID > 7);
+			_db.GetTable<Child>().Delete(p => p.ParentID > 7 || p.ChildID > 77);
+
+			_db.GetTable<Patient>().Delete(p => p.PersonID > 4 || p.PersonID < 1);
+			_db.GetTable<Person>().Delete(p => p.ID > 4 || p.ID < 1);
+
+			_db.GetTable<LinqDataTypes2>().Delete(p => p.ID > 12 || p.ID < 1);
+			_db.GetTable<LinqDataTypes>()
+				.Set(_ => _.BinaryValue, () => null)
+				.Update();
+
+			_db.GetTable<AllTypes>().Delete(p => p.ID > 2 || p.ID < 1);
+		}
+
+		[Table]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		public class AllTypes
+		{
+			[Column] public int ID { get; set; }
+		}
+		}
+
+	public class InvariantCultureRegion : IDisposable
+	{
+		private readonly CultureInfo? _original;
+
+		public InvariantCultureRegion()
+		{
+			if (!Thread.CurrentThread.CurrentCulture.Equals(CultureInfo.InvariantCulture))
+			{
+				_original = Thread.CurrentThread.CurrentCulture;
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+			}
+		}
+
+		void IDisposable.Dispose()
+		{
+			if (_original != null)
+				Thread.CurrentThread.CurrentCulture = _original;
+		}
+	}
+
 	public class FirebirdQuoteMode : IDisposable
 	{
 		private readonly FirebirdIdentifierQuoteMode _oldMode;
@@ -22,20 +79,6 @@ namespace Tests
 		void IDisposable.Dispose()
 		{
 			FirebirdConfiguration.IdentifierQuoteMode = _oldMode;
-		}
-	}
-
-	public class CustomCommandProcessor : IDisposable
-	{
-		private readonly IDbCommandProcessor? _original = DbCommandProcessorExtensions.Instance;
-		public CustomCommandProcessor(IDbCommandProcessor? processor)
-		{
-			DbCommandProcessorExtensions.Instance = processor;
-		}
-
-		public void Dispose()
-		{
-			DbCommandProcessorExtensions.Instance = _original;
 		}
 	}
 
@@ -53,17 +96,18 @@ namespace Tests
 		}
 	}
 
-	public class WithoutComparisonNullCheck : IDisposable
+	public class CompareNullsAsValuesOption : IDisposable
 	{
-		public WithoutComparisonNullCheck()
+		private readonly bool _original = Configuration.Linq.CompareNullsAsValues;
+
+		public CompareNullsAsValuesOption(bool enable)
 		{
-			Configuration.Linq.CompareNullsAsValues = false;
+			Configuration.Linq.CompareNullsAsValues = enable;
 		}
 
-		public void Dispose()
+		void IDisposable.Dispose()
 		{
-			Configuration.Linq.CompareNullsAsValues = true;
-			Query.ClearCaches();
+			Configuration.Linq.CompareNullsAsValues = _original;
 		}
 	}
 
@@ -270,4 +314,21 @@ namespace Tests
 			OracleTools.UseAlternativeBulkCopy = _oldValue;
 		}
 	}
+
+	public class PreferApply : IDisposable
+	{
+		private readonly bool _oldValue = Configuration.Linq.PreferApply;
+
+		public PreferApply(bool enable)
+		{
+			Configuration.Linq.PreferApply = enable;
+		}
+
+		public void Dispose()
+		{
+			Configuration.Linq.PreferApply = _oldValue;
+		}
+	}
+
+
 }

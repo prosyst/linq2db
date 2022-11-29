@@ -2,22 +2,23 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
 namespace Tests.Mapping
 {
-	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
 	public class FluentMappingTests : TestBase
 	{
 		[Table]
-		class MyClass
+		sealed class MyClass
 		{
 			public int ID;
 			public int ID1 { get; set; }
@@ -27,7 +28,7 @@ namespace Tests.Mapping
 		}
 
 		[Table(IsColumnAttributeRequired = true)]
-		class MyClass2
+		sealed class MyClass2
 		{
 			public int ID { get; set; }
 
@@ -35,7 +36,7 @@ namespace Tests.Mapping
 		}
 
 		[Table]
-		class MyClass3
+		sealed class MyClass3
 		{
 			public int ID { get; set; }
 		}
@@ -78,7 +79,7 @@ namespace Tests.Mapping
 		{
 		}
 
-		class MyInheritedClass2 : MyInheritedClass
+		sealed class MyInheritedClass2 : MyInheritedClass
 		{
 		}
 
@@ -88,7 +89,7 @@ namespace Tests.Mapping
 			public int     IntValue    { get; set; }
 		}
 
-		class MyInheritedClass4 : MyInheritedClass3, IInterface2
+		sealed class MyInheritedClass4 : MyInheritedClass3, IInterface2
 		{
 			public int MarkedOnType { get; set; }
 		}
@@ -98,26 +99,26 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
+
 			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
 			{
-				entityDescriptor.TableName = entityDescriptor.TableName.ToLower();
+				entityDescriptor.TableName = entityDescriptor.TableName.ToLowerInvariant();
 				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
 				{
-					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLower();
+					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLowerInvariant();
 				}
 			};
 
 			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn();
 
-
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.TableName, Is.EqualTo("newname"));
+			Assert.That(ed.Name.Name, Is.EqualTo("newname"));
 			Assert.That(ed.Columns.First().ColumnName, Is.EqualTo("id1"));
 		}
 
 		[Test]
-		public void AddAtribute1()
+		public void AddAttributeTest1()
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -126,11 +127,16 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.TableName, Is.EqualTo("NewName"));
+			Assert.That(ed.Name.Name, Is.EqualTo("NewName"));
+
+			var ms2 = new MappingSchema();
+			var ed2 = ms2.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That(ed2.Name.Name, Is.EqualTo("MyClass"));
 		}
 
 		[Test]
-		public void AddAtribute2()
+		public void AddAttributeTest2()
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -139,7 +145,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.TableName, Is.EqualTo("MyClass"));
+			Assert.That(ed.Name.Name, Is.EqualTo("MyClass"));
 		}
 
 		[Test]
@@ -227,12 +233,12 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.TableName,  Is.EqualTo("Table"));
-			Assert.That(ed.SchemaName, Is.EqualTo("Schema"));
+			Assert.That(ed.Name.Name,   Is.EqualTo("Table"));
+			Assert.That(ed.Name.Schema, Is.EqualTo("Schema"));
 		}
 
 		[Test]
-		public void Assosiation()
+		public void Association()
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -323,9 +329,9 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FluentInheritance([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var ms = MappingSchema.Default; // new MappingSchema();
+			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<TestInheritancePerson>()
@@ -348,9 +354,9 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritance2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FluentInheritance2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var ms = MappingSchema.Default; // new MappingSchema();
+			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<TestInheritancePerson>()
@@ -385,14 +391,14 @@ namespace Tests.Mapping
 			}
 		}
 
-		class DescendantEntity : BaseEntity
+		sealed class DescendantEntity : BaseEntity
 		{
 		}
 
 		[Test]
-		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var ms = MappingSchema.Default; // new MappingSchema();
+			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<DescendantEntity>()
@@ -423,13 +429,13 @@ namespace Tests.Mapping
 
 			var od1 = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.AreEqual("Name1", od1.TableName);
+			Assert.AreEqual("Name1", od1.Name.Name);
 
 			b.Entity<MyClass>().HasTableName("Name2");
 
 			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.AreEqual("Name2", od2.TableName);
+			Assert.AreEqual("Name2", od2.Name.Name);
 
 		}
 
@@ -504,7 +510,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass4));
 
-			Assert.AreEqual(nameof(IInterfaceBase), ed.TableName);
+			Assert.AreEqual(nameof(IInterfaceBase), ed.Name.Name);
 
 			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.IntValue)]!    .SkipOnUpdate);
 			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.StringValue)]! .SkipOnInsert);
@@ -540,7 +546,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test2Attr([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Issue291Test2Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
@@ -582,7 +588,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test1Attr([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Issue291Test1Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
@@ -692,6 +698,49 @@ namespace Tests.Mapping
 				else
 					Assert.That(sql2, Does.Not.Contain("[Money]"));
 			}
+		}
+
+		public class SequenceTable
+		{
+			public int Id { get; set; }
+		}
+
+		[Test]
+		public void TestSequenceHelper([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<SequenceTable>()
+				.Property(p => p.Id)
+				.UseSequence("sequencetestseq");
+
+			using var db = GetDataConnection(context, ms);
+			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
+
+			records.RetrieveIdentity(db, true);
+
+			for (var i = 0; i < records.Length; i++)
+				Assert.AreEqual(records[0].Id + i, records[i].Id);
+		}
+
+		[Test]
+		public void TestSequenceAttribute([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<SequenceTable>()
+				.Property(p => p.Id)
+				.HasAttribute(new SequenceNameAttribute("sequencetestseq"));
+
+			using var db = GetDataConnection(context, ms);
+			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
+
+			records.RetrieveIdentity(db, true);
+
+			for (var i = 0; i < records.Length; i++)
+				Assert.AreEqual(records[0].Id + i, records[i].Id);
 		}
 	}
 }

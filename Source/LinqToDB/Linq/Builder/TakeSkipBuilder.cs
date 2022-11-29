@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class TakeSkipBuilder : MethodCallBuilder
+	sealed class TakeSkipBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Skip", "Take" };
 
@@ -23,6 +23,7 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression expr;
 			var parameterize = Common.Configuration.Linq.ParameterizeTakeSkip;
+
 			if (arg.NodeType == ExpressionType.Lambda)
 			{
 				arg  = ((LambdaExpression)arg).Body.Unwrap();
@@ -31,9 +32,9 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				// revert unwrap
-				arg = methodCall.Arguments[1];
-
+				arg  = methodCall.Arguments[1];
 				expr = builder.ConvertToSql(sequence, arg);
+
 				if (expr.ElementType == QueryElementType.SqlValue)
 				{
 					var param   = builder.ParametersContext.BuildParameter(methodCall.Arguments[1], null, true).SqlParameter;
