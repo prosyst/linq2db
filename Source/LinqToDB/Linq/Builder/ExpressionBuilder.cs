@@ -154,14 +154,13 @@ namespace LinqToDB.Linq.Builder
 		public readonly Expression             Expression;
 		public readonly ParameterExpression[]? CompiledParameters;
 		public readonly List<IBuildContext>    Contexts = new ();
-		public readonly ParameterExpression    DataReaderLocal;
 
-		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
-		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
+		public static          ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
+		public static          ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
+		public static          ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
 		public        readonly ParameterExpression DataReaderLocal;
-		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
-		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
+		public static          ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
+		public static          ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
 		static bool _isDataContextParamInitialized;
 
@@ -1624,7 +1623,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 			DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
-			DataReaderParam = Expression.Parameter(typeof(IDataReader), "rd");
+			DataReaderParam = Expression.Parameter(typeof(DbDataReader), "rd");
 			ParametersParam = Expression.Parameter(typeof(object[]), "ps");
 			ExpressionParam = Expression.Parameter(typeof(Expression), "expr");
 		}

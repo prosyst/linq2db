@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using SqlQuery;
 
-	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
+	public abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
 	{
 		public OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)

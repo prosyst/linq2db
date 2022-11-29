@@ -21,7 +21,7 @@ namespace LinqToDB.Data
 
 	sealed class RecordReaderBuilder
 	{
-		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader),  "rd");
+		public static          ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader),  "rd");
 		public        readonly ParameterExpression DataReaderLocal;
 
 		public readonly List<ParameterExpression>  BlockVariables   = new ();
@@ -446,7 +446,7 @@ namespace LinqToDB.Data
 		#region Hot reload compatibility
 		private static void ClearCache(Type[]? updatedTypes) // Hot reload compatibility
 		{
-			DataReaderParam = Expression.Parameter(typeof(IDataReader),  "rd");
+			DataReaderParam = Expression.Parameter(typeof(DbDataReader),  "rd");
 		}
 		#endregion
 	}
