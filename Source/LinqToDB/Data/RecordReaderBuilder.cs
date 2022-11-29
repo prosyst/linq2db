@@ -5,6 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+#if NET6_0_OR_GREATER
+[assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Data.RecordReaderBuilder))]
+#endif
+
 namespace LinqToDB.Data
 {
 	using System.Data.Common;
@@ -439,5 +443,11 @@ namespace LinqToDB.Data
 			return expression;
 		}
 
+		#region Hot reload compatibility
+		private static void ClearCache(Type[]? updatedTypes) // Hot reload compatibility
+		{
+			DataReaderParam = Expression.Parameter(typeof(IDataReader),  "rd");
+		}
+		#endregion
 	}
 }

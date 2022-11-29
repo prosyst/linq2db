@@ -10,6 +10,10 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+#if NET6_0_OR_GREATER
+[assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Linq.Builder.ExpressionBuilder))]
+#endif
+
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
@@ -150,6 +154,7 @@ namespace LinqToDB.Linq.Builder
 		public readonly Expression             Expression;
 		public readonly ParameterExpression[]? CompiledParameters;
 		public readonly List<IBuildContext>    Contexts = new ();
+		public readonly ParameterExpression    DataReaderLocal;
 
 		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
@@ -1612,6 +1617,17 @@ namespace LinqToDB.Linq.Builder
 			return root;
 		}
 
+		#endregion
+
+		#region Hot Reload Compatibility
+		private static void ClearCache(Type[]? updatedTypes)
+		{
+			QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
+			DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
+			DataReaderParam = Expression.Parameter(typeof(IDataReader), "rd");
+			ParametersParam = Expression.Parameter(typeof(object[]), "ps");
+			ExpressionParam = Expression.Parameter(typeof(Expression), "expr");
+		}
 		#endregion
 	}
 }

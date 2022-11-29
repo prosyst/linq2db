@@ -13,7 +13,7 @@ namespace LinqToDB.Linq
 	using Extensions;
 	using Data;
 
-	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
+	public abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
 		#region Init
 

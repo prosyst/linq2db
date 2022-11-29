@@ -3699,7 +3699,7 @@ namespace LinqToDB.SqlProvider
 				sb.Append(value);
 		}
 
-		public string ApplyQueryHints(string sqlText, IReadOnlyCollection<string> queryHints)
+		public virtual string ApplyQueryHints(string sqlText, IReadOnlyCollection<string> queryHints)
 		{
 			var sb = new StringBuilder();
 
@@ -3744,7 +3744,7 @@ namespace LinqToDB.SqlProvider
 		public void RemoveAlias(string alias)
 		{
 			_aliases?.Remove(alias);
-		}
+	}
 
 		string GetAlias(string desiredAlias, string defaultAlias)
 		{
@@ -3756,7 +3756,7 @@ namespace LinqToDB.SqlProvider
 			{
 				desiredAlias = defaultAlias;
 				alias        = defaultAlias + "1";
-			}
+}
 
 			for (var i = 1; ; i++)
 			{

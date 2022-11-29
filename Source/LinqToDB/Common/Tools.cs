@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
+using System.Text;
 namespace LinqToDB.Common
 {
 	using Data;
@@ -49,6 +49,20 @@ namespace LinqToDB.Common
 		{
 			return assembly.Location;
 		}
+
+		public static String SafeNullDump(this object obj)
+		{
+			return SafeNullDump(obj, false);
+		}
+
+		public static String SafeNullDump(this object obj, bool includeTypeName)
+		{
+			return new StringBuilder()
+					.Append(obj == null ? "(null)" : obj.ToString())
+					.Append(includeTypeName ? String.Format(" (type: {0})", (obj ?? new object()).GetType().FullName) : "")
+					.ToString();
+		}
+
 
 		public static string ToDebugDisplay(string str)
 		{

@@ -4,7 +4,7 @@
 	using SqlProvider;
 	using SqlQuery;
 
-	sealed partial class Oracle11SqlBuilder : OracleSqlBuilderBase
+	public partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
 		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)

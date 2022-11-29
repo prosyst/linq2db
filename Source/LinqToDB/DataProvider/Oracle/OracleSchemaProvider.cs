@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	// Missing features:
 	// - function with ref_cursor return type returns object, need to find out how to map it
-	sealed class OracleSchemaProvider : SchemaProviderBase
+	public class OracleSchemaProvider : SchemaProviderBase
 	{
 		private readonly OracleDataProvider _provider;
 		private int _majorVersion;

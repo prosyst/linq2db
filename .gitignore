@@ -24,3 +24,6 @@ linq2db.sln.ide/
 /.temp
 .vs/
 packages/
+/.vscode/tasks.json
+/Source/LinqToDB/.vscode/tasks.json
+/atu.bat

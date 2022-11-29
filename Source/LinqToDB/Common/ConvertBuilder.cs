@@ -7,6 +7,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+#if NET6_0_OR_GREATER
+[assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Common.ConvertBuilder))]
+#endif
+
 namespace LinqToDB.Common
 {
 	using Expressions;
@@ -16,7 +20,7 @@ namespace LinqToDB.Common
 
 	public static class ConvertBuilder
 	{
-		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
+		static MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
 
 		static object ConvertDefault(object value, Type conversionType)
 		{
@@ -582,6 +586,12 @@ namespace LinqToDB.Common
 			if (to == typeof(object))
 				return Tuple.Create(Expression.Lambda(Expression.Convert(p, typeof(object)), p), ne, false);
 
+			// TEMP: Após ajustar geração do ERP.DB, este código pode ser removido
+			if (from.IsEnum && to.IsEnum)
+				return Tuple.Create(Expression.Lambda(Expression.Convert(p, to), p), 
+									(LambdaExpression?) Expression.Lambda(Expression.Convert(p, to), p), 
+									false);
+
 			var ex =
 				GetConverter     (mappingSchema, p, from, to) ??
 				ConvertUnderlying(mappingSchema, p, from, from.ToNullableUnderlying(), to, to.ToNullableUnderlying()) ??
@@ -714,5 +724,13 @@ namespace LinqToDB.Common
 		}
 
 		#endregion
+
+		#region Hot reload compatibility
+		private static void ClearCache(Type[]? updatedTypes)
+		{
+			_defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
+		}
+		#endregion
+
 	}
 }
