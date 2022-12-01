@@ -1780,6 +1780,14 @@ namespace LinqToDB.Mapping
 			EntityDescriptorsCache.Clear();
 		}
 
+		public void RemoveFromCache(Type entityType)
+		{
+			lock (EntityDescriptorsCache)
+			{
+				EntityDescriptorsCache.Remove((entityType, this.ConfigurationID));
+			}
+		}
+
 		#endregion
 
 		#region Enum
