@@ -42,7 +42,6 @@ namespace LinqToDB.DataProvider.Oracle
 		public const string DevartTypesNamespace  = "Devart.Data.Oracle";
 		public const string DevartFactoryName     = "Devart.Data.Oracle";
 
-
 		private OracleProviderAdapter(
 			Type connectionType,
 			Type dataReaderType,
@@ -1048,7 +1047,7 @@ namespace LinqToDB.DataProvider.Oracle
 				return null;
 			}
 
-		public static OracleDbType GetDbType(DbDataType dbDataType)
+			public static OracleDbType GetDbType(DbDataType dbDataType)
 			{
 				return dbDataType.DataType switch
 				{
@@ -1473,7 +1472,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public sealed class OracleConnection : TypeWrapper, IDisposable
+			public sealed class OracleConnection : TypeWrapper, IConnectionWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -1500,6 +1499,8 @@ namespace LinqToDB.DataProvider.Oracle
 				public void      Open         () => ((Action<OracleConnection>         )CompiledWrappers[0])(this);
 				public DbCommand CreateCommand() => ((Func<OracleConnection, DbCommand>)CompiledWrappers[1])(this);
 				public void      Dispose      () => ((Action<OracleConnection>         )CompiledWrappers[2])(this);
+
+				DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 			}
 
 			[Wrapper]

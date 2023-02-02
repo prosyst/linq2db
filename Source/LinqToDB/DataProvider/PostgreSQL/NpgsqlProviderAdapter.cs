@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -16,7 +15,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Expressions;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 
 	public class NpgsqlProviderAdapter : IDynamicProviderAdapter
 	{
@@ -540,10 +538,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[Wrapper]
-		public class NpgsqlConnection : TypeWrapper, IDisposable
+		public class NpgsqlConnection : TypeWrapper, IConnectionWrapper
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
+			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get PostgreSqlVersion
 				(Expression<Func<NpgsqlConnection, Version>>)((NpgsqlConnection this_) => this_.PostgreSqlVersion),
@@ -566,6 +563,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			// not implemented, as it is not called from wrapper
 			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
 			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		#region BulkCopy

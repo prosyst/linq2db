@@ -21,7 +21,7 @@ namespace Cli.Default.SqlServer
 
 		#region Associations
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXid), OtherKey = nameof(SqlServer.TestSchemaX.TestSchemaXid))]
 		public TestSchemaX TestSchemaX { get; set; } = null!;

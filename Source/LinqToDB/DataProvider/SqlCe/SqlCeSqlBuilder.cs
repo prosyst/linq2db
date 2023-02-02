@@ -4,14 +4,14 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	sealed class SqlCeSqlBuilder : BasicSqlBuilder
 	{
-		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -71,6 +71,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
+			// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms172424(v=sql.90)
 			switch (type.Type.DataType)
 			{
 				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                                        return;
@@ -91,6 +92,17 @@ namespace LinqToDB.DataProvider.SqlCe
 					}
 
 					break;
+
+				case DataType.Binary:
+					StringBuilder.Append("BINARY");
+					if (type.Type.Length > 1 && type.Type.Length <= 8000)
+						StringBuilder.AppendFormat("({0})", type.Type.Length);
+					return;
+				case DataType.VarBinary:
+					StringBuilder.Append("VARBINARY");
+					if (type.Type.Length > 1 && type.Type.Length <= 8000)
+						StringBuilder.AppendFormat("({0})", type.Type.Length);
+					return;
 			}
 
 			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);

@@ -10,10 +10,12 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using SqlQuery;
 
-	public abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
+	public abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleOptions>
 	{
-		public OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public override bool CteFirst => false;
+
+		protected OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -67,7 +69,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
 				base.BuildWhere(selectQuery) ||
@@ -150,18 +152,6 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
-		{
-			if (statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
-			{
-				BuildInsertQuery2(statement, insertClause, addAlias);
-			}
-			else
-			{
-				base.BuildInsertQuery(statement, insertClause, addAlias);
-			}
-		}
-
 		protected sealed override bool IsReserved(string word)
 		{
 			// TODO: now we use static 11g list
@@ -185,15 +175,10 @@ namespace LinqToDB.DataProvider.Oracle
 			// now we check only for latin letters
 			// Also we should allow only uppercase letters:
 			// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
-			return !IsReserved(name) &&
-				((OracleTools.DontEscapeLowercaseIdentifiers && name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
+			return !IsReserved(name)                                                                                               &&
+				((ProviderOptions.DontEscapeLowercaseIdentifiers && name[0] is >= 'a' and <= 'z') || name[0] is >= 'A' and <= 'Z') &&
 				name.All(c =>
-					(OracleTools.DontEscapeLowercaseIdentifiers && c >= 'a' && c <= 'z') ||
-					(c >= 'A' && c <= 'Z') ||
-					(c >= '0' && c <= '9') ||
-					c == '$' ||
-					c == '#' ||
-					c == '_');
+					(ProviderOptions.DontEscapeLowercaseIdentifiers && c is >= 'a' and <= 'z') || c is >= 'A' and <= 'Z' or >= '0' and <= '9' or '$' or '#' or '_');
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -387,7 +372,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						.AppendLine("\tBEGIN")
 						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
-					
+
 					AppendSchemaPrefix(StringBuilder, dropTable.Table!.TableName.Schema);
 					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.TableName.Name), ConvertType.SequenceName);
 
@@ -651,7 +636,7 @@ END;",
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
 		{
 			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
-			
+
 			Indent++;
 
 			if (statement.InsertType == MultiInsertType.Unconditional)
@@ -677,7 +662,7 @@ END;",
 					{
 						StringBuilder.AppendLine("ELSE");
 					}
-		
+
 					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 				}
 			}

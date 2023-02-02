@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -19,9 +18,9 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Reflection;
+	using SqlQuery;
 
 	sealed partial class ExpressionBuilder
 	{
@@ -121,6 +120,8 @@ namespace LinqToDB.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
+		public readonly DataOptions DataOptions;
+
 		public ExpressionBuilder(
 			Query                             query,
 			ExpressionTreeOptimizationContext optimizationContext,
@@ -133,9 +134,10 @@ namespace LinqToDB.Linq.Builder
 
 			CollectQueryDepended(expression);
 
-			CompiledParameters   = compiledParameters;
-			DataContext          = dataContext;
-			OriginalExpression   = expression;
+			CompiledParameters = compiledParameters;
+			DataContext        = dataContext;
+			DataOptions        = dataContext.Options;
+			OriginalExpression = expression;
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
@@ -179,6 +181,8 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		#region Builder SQL
+
+		internal bool DisableDefaultIfEmpty;
 
 		public Query<T> Build<T>()
 		{
@@ -359,25 +363,17 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertParameters(Expression expression)
 		{
+			if (CompiledParameters == null) return expression;
+
 			return expression.Transform(CompiledParameters, static(compiledParameters, expr) =>
 			{
-				switch (expr.NodeType)
+				if (expr.NodeType == ExpressionType.Parameter)
 				{
-					case ExpressionType.Parameter:
-						if (compiledParameters != null)
-						{
-							var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
-
-							if (idx > 0)
-								return
-									Expression.Convert(
-										Expression.ArrayIndex(
-											ParametersParam,
-											ExpressionInstances.Int32(idx)),
-										expr.Type);
-						}
-
-						break;
+					var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
+					if (idx >= 0)
+						return Expression.Convert(
+							Expression.ArrayIndex(ParametersParam, ExpressionInstances.Int32(idx)),
+							expr.Type);
 				}
 
 				return expr;
@@ -522,7 +518,7 @@ namespace LinqToDB.Linq.Builder
 
 									mc = mc.Update(mc.Object, args);
 									return new TransformInfo(mc, true);
-								};
+								}
 							}
 						}
 
@@ -1490,8 +1486,7 @@ namespace LinqToDB.Linq.Builder
 					var parameters = call.Method.GetParameters();
 					for (int i = 0; i < parameters.Length; i++)
 					{
-						var attr = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>()
-							.FirstOrDefault();
+						var attr = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
 						if (attr != null)
 							query.AddQueryDependedObject(call.Arguments[i], attr);
 					}
@@ -1602,7 +1597,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, Expression>? _rootExpressions;
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public Expression? GetRootObject(Expression? expr)
 		{
 			if (expr == null)

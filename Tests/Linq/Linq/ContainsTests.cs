@@ -14,12 +14,13 @@ namespace Tests.Linq
 	{
 		private TempTable<Src> SetupSrcTable(IDataContext db)
 		{
-			db.GetFluentMappingBuilder()
+			new FluentMappingBuilder(db.MappingSchema)
 				.Entity<Src>()
 					.Property(e => e.CEnum)
 						.HasDataType(DataType.VarChar)
 						.HasLength(20)
-						.HasConversion(v => $"___{v}___", v => (ConvertedEnum)Enum.Parse(typeof(ConvertedEnum), v.Substring(3, v.Length - 6)));
+						.HasConversion(v => $"___{v}___", v => (ConvertedEnum)Enum.Parse(typeof(ConvertedEnum), v.Substring(3, v.Length - 6)))
+				.Build();
 
 			var data = new[]
 			{
@@ -37,7 +38,7 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int? result;
@@ -67,7 +68,7 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int? result;
@@ -97,7 +98,7 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int? result;
@@ -127,11 +128,11 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
-			
+
 			count = src.Count(s => s.Int.In(Array.Empty<int?>()));
 			count.Should().Be(0);
 
@@ -148,11 +149,11 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
-			
+
 			count = src.Count(s => s.Enum.In(Array.Empty<ContainsEnum?>()));
 			count.Should().Be(0);
 
@@ -169,11 +170,11 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
-			
+
 			count = src.Count(s => s.CEnum.In(Array.Empty<ConvertedEnum?>()));
 			count.Should().Be(0);
 
@@ -194,11 +195,11 @@ namespace Tests.Linq
 			[Values]                              bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
-			
+
 			count = src.Count(s => s.Int.In(null, null));
 			count.Should().Be(withNullCompares ? 1 : 0);
 
@@ -216,11 +217,11 @@ namespace Tests.Linq
 			[Values]                              bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
-			
+
 			count = src.Count(s => s.Enum.In(null, null));
 			count.Should().Be(withNullCompares ? 1 : 0);
 
@@ -238,11 +239,11 @@ namespace Tests.Linq
 			[Values]                              bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
-			
+
 			count = src.Count(s => s.CEnum.In(null, null));
 			count.Should().Be(withNullCompares ? 1 : 0);
 

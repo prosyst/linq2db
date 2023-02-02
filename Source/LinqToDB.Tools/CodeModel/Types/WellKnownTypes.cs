@@ -369,10 +369,6 @@ namespace LinqToDB.CodeModel
 			public static CodeIdentifier DataExtensions_GetTable { get; } = new CodeIdentifier(nameof(global::LinqToDB.DataExtensions.GetTable), true);
 
 			/// <summary>
-			/// <see cref="Sql.ExpressionAttribute.Configuration"/> property reference.
-			/// </summary>
-			public static CodeIdentifier Sql_ExpressionAttribute_Configuration    { get; } = new CodeIdentifier(nameof(Sql.ExpressionAttribute.Configuration), true);
-			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/> property reference.
 			/// </summary>
 			public static CodeIdentifier Sql_ExpressionAttribute_ServerSideOnly   { get; } = new CodeIdentifier(nameof(Sql.ExpressionAttribute.ServerSideOnly), true);
@@ -430,10 +426,6 @@ namespace LinqToDB.CodeModel
 			/// </summary>
 			public static CodeIdentifier Sql_TableFunctionAttribute_Package       { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.Package), true);
 			/// <summary>
-			/// <see cref="Sql.TableFunctionAttribute.Configuration"/> property reference.
-			/// </summary>
-			public static CodeIdentifier Sql_TableFunctionAttribute_Configuration { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.Configuration), true);
-			/// <summary>
 			/// <see cref="Sql.TableFunctionAttribute.ArgIndices"/> property reference.
 			/// </summary>
 			public static CodeIdentifier Sql_TableFunctionAttribute_ArgIndices    { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.ArgIndices), true);
@@ -482,19 +474,24 @@ namespace LinqToDB.CodeModel
 
 			public static class Configuration
 			{
-				private static readonly IType _linqToDBConnectionOptionsT = Parser.Parse(typeof(LinqToDBConnectionOptions<>));
+				private static readonly IType _dataOptionsT = Parser.Parse(typeof(DataOptions<>));
 
 				/// <summary>
-				/// <see cref="global::LinqToDB.Configuration.LinqToDBConnectionOptions"/> type descriptor.
+				/// <see cref="DataOptions"/> type descriptor.
 				/// </summary>
-				public static IType LinqToDBConnectionOptions { get; } = Parser.Parse<LinqToDBConnectionOptions>();
+				public static IType DataOptions { get; } = Parser.Parse<DataOptions>();
 
 				/// <summary>
-				/// Returns <see cref="LinqToDBConnectionOptions{T}"/> type descriptor.
+				/// <see cref="DataOptions{T}.Options"/> property reference.
+				/// </summary>
+				public static CodeReference DataOptions_Options { get; } = PropertyOrField((DataOptions<DataConnection> o) => o.Options, false);
+
+				/// <summary>
+				/// Returns <see cref="DataOptions{T}"/> type descriptor.
 				/// </summary>
 				/// <param name="contextType">Context type.</param>
 				/// <returns>Type descriptor.</returns>
-				public static IType LinqToDBConnectionOptionsWithType(IType contextType) => _linqToDBConnectionOptionsT.WithTypeArguments(contextType);
+				public static IType DataOptionsWithType(IType contextType) => _dataOptionsT.WithTypeArguments(contextType);
 			}
 
 			public static class Mapping
@@ -526,6 +523,11 @@ namespace LinqToDB.CodeModel
 				public static CodeIdentifier MappingSchema_SetConvertExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.MappingSchema.SetConvertExpression), true);
 
 				/// <summary>
+				/// <see cref="MappingAttribute.Configuration"/> property reference.
+				/// </summary>
+				public static CodeIdentifier MappingAttribute_Configuration { get; } = new CodeIdentifier(nameof(MappingAttribute.Configuration), true);
+
+				/// <summary>
 				/// <see cref="AssociationAttribute.CanBeNull"/> property reference.
 				/// </summary>
 				public static CodeIdentifier AssociationAttribute_CanBeNull             { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.CanBeNull), true);
@@ -546,10 +548,6 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static CodeIdentifier AssociationAttribute_OtherKey              { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.OtherKey), true);
 				/// <summary>
-				/// <see cref="AssociationAttribute.Configuration"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_Configuration         { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.Configuration), true);
-				/// <summary>
 				/// <see cref="AssociationAttribute.AliasName"/> property reference.
 				/// </summary>
 				public static CodeIdentifier AssociationAttribute_AliasName             { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.AliasName), true);
@@ -557,25 +555,6 @@ namespace LinqToDB.CodeModel
 				/// <see cref="AssociationAttribute.Storage"/> property reference.
 				/// </summary>
 				public static CodeIdentifier AssociationAttribute_Storage               { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.Storage), true);
-#pragma warning disable CS0618 // Type or member is obsolete
-				/// <summary>
-				/// <see cref="AssociationAttribute.KeyName"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_KeyName               { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.KeyName), true);
-				/// <summary>
-				/// <see cref="AssociationAttribute.BackReferenceName"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_BackReferenceName     { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.BackReferenceName), true);
-				/// <summary>
-				/// <see cref="AssociationAttribute.IsBackReference"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_IsBackReference       { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.IsBackReference), true);
-				/// <summary>
-				/// <see cref="AssociationAttribute.Relationship"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_Relationship          { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.Relationship), true);
-#pragma warning restore CS0618 // Type or member is obsolete
-
 				/// <summary>
 				/// <see cref="TableAttribute.Schema"/> property reference.
 				/// </summary>
@@ -593,10 +572,6 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static CodeIdentifier TableAttribute_IsView                    { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.IsView), true);
 				/// <summary>
-				/// <see cref="TableAttribute.Configuration"/> property reference.
-				/// </summary>
-				public static CodeIdentifier TableAttribute_Configuration             { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.Configuration), true);
-				/// <summary>
 				/// <see cref="TableAttribute.IsColumnAttributeRequired"/> property reference.
 				/// </summary>
 				public static CodeIdentifier TableAttribute_IsColumnAttributeRequired { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.IsColumnAttributeRequired), true);
@@ -613,10 +588,6 @@ namespace LinqToDB.CodeModel
 				/// <see cref="ColumnAttribute.CanBeNull"/> property reference.
 				/// </summary>
 				public static CodeIdentifier ColumnAttribute_CanBeNull         { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.ColumnAttribute.CanBeNull), true);
-				/// <summary>
-				/// <see cref="ColumnAttribute.Configuration"/> property reference.
-				/// </summary>
-				public static CodeIdentifier ColumnAttribute_Configuration     { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.ColumnAttribute.Configuration), true);
 				/// <summary>
 				/// <see cref="ColumnAttribute.DataType"/> property reference.
 				/// </summary>
@@ -705,7 +676,7 @@ namespace LinqToDB.CodeModel
 				/// <summary>
 				/// DataConnectionExtensions.ExecuteProc method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_ExecuteProc { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.ExecuteProc), true);
+				public static CodeIdentifier DataConnectionExtensions_ExecuteProc      { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.ExecuteProc), true);
 				/// <summary>
 				/// DataConnectionExtensions.ExecuteProcAsync method reference.
 				/// </summary>
@@ -713,11 +684,16 @@ namespace LinqToDB.CodeModel
 				/// <summary>
 				/// DataConnectionExtensions.QueryProc method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_QueryProc   { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProc), true);
+				public static CodeIdentifier DataConnectionExtensions_QueryProc        { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProc), true);
 				/// <summary>
 				/// DataConnectionExtensions.QueryProcAsync method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_QueryProcAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProcAsync), true);
+				public static CodeIdentifier DataConnectionExtensions_QueryProcAsync   { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProcAsync), true);
+
+				/// <summary>
+				/// <see cref="DataConnection.CommandTimeout"/> property reference.
+				/// </summary>
+				public static CodeReference DataConnection_CommandTimeout { get; } = PropertyOrField((DataConnection dc) => dc.CommandTimeout, false);
 
 				/// <summary>
 				/// <see cref="DataParameter.Direction"/> property reference.
@@ -762,7 +738,7 @@ namespace LinqToDB.CodeModel
 		}
 
 		// TODO: replace forceNullable with NRT annotation lookup
-		private static CodeReference PropertyOrField<TObject, TProperty>(Expression<Func<TObject, TProperty>> accessor, bool forceNullable)
+		public static CodeReference PropertyOrField<TObject, TProperty>(Expression<Func<TObject, TProperty>> accessor, bool forceNullable)
 		{
 			var member = ((MemberExpression)accessor.Body).Member;
 			if (member is PropertyInfo pi)
