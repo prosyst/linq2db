@@ -1753,7 +1753,7 @@ namespace LinqToDB.Mapping
 		{
 			lock (EntityDescriptorsCache)
 			{
-				EntityDescriptorsCache.Remove((entityType, this.ConfigurationID));
+				EntityDescriptorsCache.Remove((entityType, ((IConfigurationID)this).ConfigurationID));
 			}
 		}
 

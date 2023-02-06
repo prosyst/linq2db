@@ -22,6 +22,11 @@ if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools" (
     echo Using Visual Studio 2022 Community
     echo.
     set "root_path=%ProgramFiles%\Microsoft Visual Studio\2022\Community"
+) else if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Preview" (
+    echo.
+    echo Using Visual Studio 2022 Preview
+    echo.
+    set "root_path=%ProgramFiles%\Microsoft Visual Studio\2022\Preview"
 ) else (
     echo Could not find an installed version of Visual Studio 2022 or Build Tools
     exit
