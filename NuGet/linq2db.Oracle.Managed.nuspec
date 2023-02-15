@@ -14,7 +14,7 @@
 		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45">
+			<group targetFramework="net452">
 				<dependency id="linq2db"                       version="5.0.0"    />
 				<dependency id="Oracle.ManagedDataAccess"      version="19.18.0"  />
 			</group>

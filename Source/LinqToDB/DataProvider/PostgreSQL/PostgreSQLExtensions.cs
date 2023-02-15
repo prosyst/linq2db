@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Expressions;
 	using Linq;
 	using SqlQuery;
-#if !NET45
+#if !NET452
 	using Common;
 	using Mapping;
 #endif
@@ -105,8 +105,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		#endregion
 
 		#region unnest
-
-#if !NET45
+		
+#if !NET452
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
 		{
@@ -353,7 +353,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region generate_series
 
-#if !NET45
+#if !NET452
 		static Func<IDataContext, int, int, IQueryable<int>>? _generateSeriesIntFunc;
 
 		[ExpressionMethod(nameof(GenerateSeriesIntImpl))]
@@ -399,7 +399,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region generate_subscripts
 
-#if !NET45
+#if !NET452
 		[ExpressionMethod(nameof(GenerateSubscriptsImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension)
 		{

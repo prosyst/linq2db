@@ -177,7 +177,7 @@ namespace LinqToDB.Linq
 				public static MethodInfo Like22 = MethodOf(s => Sql.Like(s, "", ' '));
 			}
 
-#if !NET45
+#if !NET452
 			public sealed class FormattableString : Expressor<System.FormattableString>
 			{
 				public static MethodInfo GetArguments = MethodOf(s => s.GetArgument(0));
@@ -245,7 +245,7 @@ namespace LinqToDB.Linq
 
 			Functions.String.Like21			= Functions.String.MethodOf(s => Sql.Like(s, ""));
 			Functions.String.Like22			= Functions.String.MethodOf(s => Sql.Like(s, "", ' '));
-#if !NET45
+#if !NET452
 			Functions.FormattableString.GetArguments 
 											= Functions.FormattableString.MethodOf(s => s.GetArgument(0));
 #endif

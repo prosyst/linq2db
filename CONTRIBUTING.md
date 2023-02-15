@@ -40,7 +40,7 @@ uid: contributing
 
 Preferred target defines:
 
-- `NETFRAMEWORK` - `net45`, `net46` and `net472` target ifdef
+- `NETFRAMEWORK` - `net452`, `net46` and `net472` target ifdef
 - `NETSTANDARD2_1PLUS` - targets with `netstandard2.1` support (`netstandard2.1`, `netcoreapp3.1`, `net6.0`, `net7.0`). Don't use this define in test projects!
 - `NATIVE_ASYNC` - ifdef with native support for `ValueTask`, `IAsyncEnumerable<T>` and `IAsyncDisposable` types
 
@@ -51,7 +51,7 @@ Other allowed target defines:
 - `NETSTANDARD2_0` - `netstandard2.0` target ifdef
 - `NET6_0` - `net6.0` target ifdef
 - `NET7_0` - `net7.0` target ifdef
-- `NET45` - `net45` target ifdef
+- `NET452` - `net452` target ifdef
 - `NET46` - `net46` target ifdef
 - `NET472` - `net472` target ifdef
 

@@ -1203,7 +1203,7 @@ namespace Tests.DataProvider
 			AreEqual(expected, result);
 		}
 
-#if !NET45
+#if !NET452
 		[Test]
 		public void OpenJson4([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{

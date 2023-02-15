@@ -639,7 +639,7 @@ namespace LinqToDB
 			}
 		}
 
-#if !NET45
+#if !NET452
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(

@@ -5,7 +5,7 @@
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
-		<TargetFrameworks>net45;net46;net472;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net452;net46;net472;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -19,7 +19,7 @@
 		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net452' AND '$(TargetFramework)' != 'net46' ">
 		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
@@ -100,7 +100,7 @@
 		</Compile>
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net472' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net452' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.Configuration" />
 		<Reference Include="System.Data.DataSetExtensions" />

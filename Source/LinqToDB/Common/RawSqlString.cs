@@ -1,4 +1,4 @@
-﻿#if !NET45
+﻿#if !NET452
 using System;
 #endif
 
@@ -16,7 +16,7 @@ namespace LinqToDB.Common
 		/// <param name="s"> The string. </param>
 		public static implicit operator RawSqlString(string s) => new RawSqlString(s);
 
-#if !NET45
+#if !NET452
 		/// <summary>
 		///     Implicitly converts a <see cref="FormattableString" /> to a <see cref="RawSqlString" />
 		/// </summary>

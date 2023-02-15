@@ -1337,7 +1337,7 @@ namespace LinqToDB.Data
 
 				if (parameter.Direction != null) p.Direction =       parameter.Direction.Value;
 				if (parameter.Size      != null) p.Size      =       parameter.Size     .Value;
-#if NET45
+#if NET452
 #pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
 				if (parameter.Precision != null) ((IDbDataParameter)p).Precision = (byte)parameter.Precision.Value;
 				if (parameter.Scale     != null) ((IDbDataParameter)p).Scale     = (byte)parameter.Scale    .Value;

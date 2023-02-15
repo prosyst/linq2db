@@ -34,14 +34,6 @@ namespace LinqToDB.Linq
 
 		#region Public Members
 
-#if DEBUG
-		// This property is helpful in Debug Mode.
-		//
-		[JetBrains.Annotations.UsedImplicitly]
-		// ReSharper disable once InconsistentNaming
-		public string _sqlText => SqlText;
-#endif
-
 		public string SqlText
 		{
 			get

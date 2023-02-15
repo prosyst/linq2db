@@ -1,4 +1,4 @@
-﻿#if NET45
+﻿#if NET452
 #region Copyright Simple Injector Contributors
 /* The Simple Injector is an easy-to-use Inversion of Control library for .NET
  * 

@@ -13,7 +13,7 @@
 		<tags>linq linq2db Access LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45">
+			<group targetFramework="net452">
 				<dependency id="linq2db"           version="5.0.0" />
 			</group>
 			<group targetFramework="net46">

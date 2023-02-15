@@ -29,7 +29,7 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<T,EntityMapEntry<T>> _entities;
 
-#if NET45
+#if NET452
 		public IDictionary<T, EntityMapEntry<T>> Entities => _entities;
 #else
 		public IReadOnlyDictionary<T,EntityMapEntry<T>> Entities => _entities;

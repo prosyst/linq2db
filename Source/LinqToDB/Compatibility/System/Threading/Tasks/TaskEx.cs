@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-#if NET45
+#if NET452
 using LinqToDB.Common.Internal;
 #endif
 
@@ -12,7 +12,7 @@ namespace System.Threading.Tasks
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
 			{
-#if NET45
+#if NET452
 				return TaskCache.False;
 #else
 				return Task.CompletedTask;

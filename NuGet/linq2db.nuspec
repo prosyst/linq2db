@@ -10,7 +10,7 @@
 		</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45" />
+			<group targetFramework="net452" />
 			<group targetFramework="net46" />
 			<group targetFramework="net472">
 				<dependency id="Microsoft.Bcl.AsyncInterfaces"     version="7.0.0" />
@@ -33,9 +33,9 @@
 	<files>
 		<file src="..\Nuget\README.linq2db.md"                                target="README.md"           />
 
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.pdb"          target="lib\net45\"          />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.xml"          target="lib\net45\"          />
-		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"          target="lib\net45\"          />
+		<file src="..\Source\LinqToDB\bin\Release\net452\linq2db.pdb"         target="lib\net452\"          />
+		<file src="..\Source\LinqToDB\bin\Release\net452\linq2db.xml"         target="lib\net452\"          />
+		<file src="..\Source\LinqToDB\bin\Release\net452\linq2db.dll"         target="lib\net452\"          />
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.pdb"          target="lib\net46\"          />
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.xml"          target="lib\net46\"          />
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"          target="lib\net46\"          />

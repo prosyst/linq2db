@@ -1461,7 +1461,7 @@ namespace LinqToDB
 
 		#region FromSql
 
-#if !NET45
+#if !NET452
 		/// <summary>
 		/// Compares two FormattableString parameters
 		/// </summary>

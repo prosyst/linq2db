@@ -3577,7 +3577,7 @@ namespace LinqToDB.SqlProvider
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Size).Append(')');
 				}
-#if NET45
+#if NET452
 #pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
 				else if (((IDbDataParameter)parameter).Precision > 0)
 				{

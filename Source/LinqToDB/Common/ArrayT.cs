@@ -13,7 +13,7 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Static instance of empty array of specific type.
 		/// </summary>
-#if NET45
+#if NET452
 		public static readonly T[] Empty = new T[0];
 #else
 		public static readonly T[] Empty = Array.Empty<T>();
