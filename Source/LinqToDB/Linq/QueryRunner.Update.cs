@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using System.Collections.Generic;
 	using Common;
 	using Common.Internal.Cache;
 	using Mapping;
@@ -26,9 +27,11 @@ namespace LinqToDB.Linq
 				public static void ClearCache()
 				{
 					QueryCache.Clear();
+					ParameterAcessorCache.Clear();
 				}
 
 				internal static MemoryCache<IStructuralEquatable,Query<int>?> QueryCache { get; } = new(new());
+				internal static MemoryCache<KeyValuePair<Type, string>,ParameterAccessor> ParameterAcessorCache { get; } = new(new());
 			}
 
 			static Query<int>? CreateQuery(
@@ -74,7 +77,7 @@ namespace LinqToDB.Linq
 				var fieldCount = 0;
 				foreach (var field in fields)
 				{
-					var param = GetParameter(type, dataContext, field);
+					var param = Cache.ParameterAcessorCache.GetOrCreate(new KeyValuePair<Type, string>(type, field.Name), x=>  GetParameter(type, dataContext, field));
 
 					ei.Queries[0].AddParameterAccessor(param);
 
@@ -96,7 +99,7 @@ namespace LinqToDB.Linq
 
 				foreach (var field in keys)
 				{
-					var param = GetParameter(type, dataContext, field);
+					var param = Cache.ParameterAcessorCache.GetOrCreate(new KeyValuePair<Type, string>(type, field.Name), x=>  GetParameter(type, dataContext, field));
 
 					ei.Queries[0].AddParameterAccessor(param);
 
