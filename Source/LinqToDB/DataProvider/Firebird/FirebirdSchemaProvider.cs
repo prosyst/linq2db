@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Data;
 	using SchemaProvider;
 
-	sealed class FirebirdSchemaProvider : SchemaProviderBase
+	public class FirebirdSchemaProvider : SchemaProviderBase
 	{
 		private readonly FirebirdDataProvider _provider;
 		private int _majorVersion;
@@ -322,6 +322,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 		{
 			// translation table based on logic from
 			// https://github.com/FirebirdSQL/NETProvider/blob/master/src/FirebirdSql.Data.FirebirdClient/Common/TypeHelper.cs
+#pragma warning disable CS9336 // The pattern is redundant.
 			return (type, subType, scale) switch
 			{
 				(37, _, _) or (38, _, _)                                            => "VARCHAR",
@@ -346,6 +347,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 				(26, not 1 or 2, >= 0)                                              => "INT128",
 				_                                                                   => "unknown"
 			};
+#pragma warning restore CS9336 // The pattern is redundant.
 		}
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)

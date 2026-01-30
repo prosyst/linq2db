@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Access
 	// unused tables:
 	// DataSourceInformation - database settings
 	// ReservedWords - reserved words
-	sealed class AccessODBCSchemaProvider : AccessSchemaProviderBase
+	public class AccessODBCSchemaProvider : AccessSchemaProviderBase
 	{
 		public AccessODBCSchemaProvider()
 		{

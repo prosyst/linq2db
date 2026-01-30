@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using SqlQuery;
 
-	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleOptions>
+	public abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleOptions>
 	{
 		public override bool CteFirst => false;
 

@@ -369,6 +369,7 @@ dotnet_diagnostic.IDE0301.severity = none # IDE0301: Collection initialization c
 dotnet_diagnostic.IDE0305.severity = none # IDE0305: Collection initialization can be simplified
 dotnet_diagnostic.IDE0306.severity = none # IDE0306: Simplify conditional expression
 dotnet_diagnostic.IDE0350.severity = none # IDE0350: Use block-scoped namespace
+dotnet_diagnostic.IDE0370.severity = none # IDE0370: Suppression is unecessary
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 
 dotnet_diagnostic.CS1998.severity = error # CS1998: Async method lacks 'await' operators and will run synchronously

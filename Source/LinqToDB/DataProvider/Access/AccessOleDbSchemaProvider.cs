@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Access
 	using Data;
 	using SchemaProvider;
 
-	sealed class AccessOleDbSchemaProvider : AccessSchemaProviderBase
+	public class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
 		private readonly AccessOleDbDataProvider _provider;
 

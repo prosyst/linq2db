@@ -14,7 +14,7 @@ namespace LinqToDB.Linq
 	using Tools;
 	using Extensions;
 
-	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
+	public abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
 		#region Init
 
@@ -40,7 +40,9 @@ namespace LinqToDB.Linq
 		//
 		[JetBrains.Annotations.UsedImplicitly]
 		// ReSharper disable once InconsistentNaming
+#pragma warning disable CS3008 // Identifier is not CLS-compliant
 		public string _sqlText => SqlText;
+#pragma warning restore CS3008 // Identifier is not CLS-compliant
 #endif
 
 		public string SqlText

@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Configuration;
 
 	[UsedImplicitly]
-	sealed class FirebirdFactory : IDataProviderFactory
+	public class FirebirdFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

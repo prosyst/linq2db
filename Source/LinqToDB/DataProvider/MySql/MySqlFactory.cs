@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Configuration;
 
 	[UsedImplicitly]
-	sealed class MySqlFactory : IDataProviderFactory
+	public class MySqlFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

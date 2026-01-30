@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Access
 	using Data;
 	using SchemaProvider;
 
-	abstract class AccessSchemaProviderBase : SchemaProviderBase
+	public abstract class AccessSchemaProviderBase : SchemaProviderBase
 	{
 		protected AccessSchemaProviderBase()
 		{
